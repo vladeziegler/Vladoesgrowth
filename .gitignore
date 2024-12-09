@@ -1,0 +1,47 @@
+.env
+__pycache__/
+
+#toml file
+.streamlit/secrets.toml
+
+*.ipynb_checkpoints
+
+config.py
+
+*tools/*.ipynb
+
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.py[cod]
+*$py.class
+
+.env
+.venv
+env/
+venv/
+ENV/
+
+# Secrets
+.streamlit/secrets.toml
+*.env
+
+# Notebooks
+*.ipynb
+.ipynb_checkpoints
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Project specific
+chromadb/
+*.dbpoetry.lock
+src/.streamlit/secrets.toml

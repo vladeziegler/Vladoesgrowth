@@ -1,0 +1,10 @@
+[server]
+fileWatcherType = "none"
+maxUploadSize = 200
+maxMessageSize = 200
+
+[browser]
+gatherUsageStats = false
+
+[global]
+developmentMode = false
