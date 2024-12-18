@@ -1,0 +1,643 @@
+
+
+# Database Management
+database_manager_task:
+  description: Reset the vector database when using the "Reset Database" tool.
+  expected_output: Successfully reset the vector database.
+  agent: database_manager_agent
+
+# YouTube Channel Scraping
+scrape_youtube_channel_task:
+  description: >
+    Scrape the 10 most relevant videos from the specified YouTube channel using the "Fetch Relevant Videos for Channel" tool.
+    IMPORTANT: 
+    - If {youtube_channel_handle} not found, DO NOT use tool, and move on to the next task
+    - If {youtube_channel_handle} is found, extract relevant information about the content of the most relevant ten videos
+    - Ensure all information comes directly from the YouTube channel and videos
+    - Do not make up any information
+  expected_output: Extract relevant information about the content of the ten most relevant videos from the {youtube_channel_handle} YouTube channel.
+  agent: scrape_agent
+
+# Video Processing
+process_video_task:
+  description: >
+    Process the extracted video urls from the previous task ONLY if {youtube_channel_handle} is found.
+    - Add videos to the vector database
+    - Ensure each video is properly added
+    - All information must come directly from the searches
+    - Do not make up any information
+    IMPORTANT: if {youtube_channel_handle} not found, DO NOT use tool "Add Video to Vector DB", and move on to the next task.
+  expected_output: Successfully add the videos to the vector database.
+  agent: vector_db_agent
+
+# Challenges Research
+find_achievements_task:
+  description: >
+    OBJECTIVE:
+    Extract and analyze the content creator's achievements from the database, 
+    documenting how these achievements originated and influenced their current work.
+
+    Only populate the objects of the AchievementObject class.
+
+    METHODOLOGY:
+    1. Execute those queries sequentially:
+          "What are the significant achievements of the author?"
+          "What milestones show his/her success?"
+          "What metrics demonstrate their growth?"
+          "What are the key achievements that the author achieved that gives him more credibility and successful?"
+       
+    2. Evaluate the responses to the above queries to identify the author's core values. Don't query the following questions to the database. You need to ask yourself directly these questions to identify the author's achievements and learnings from them. 
+        "How does the author organise himself for success?"
+        "How does the author react when facing failure?"
+        "What personal traumas, transformative moments happened to the author?"
+        "What was the author educational and social conditioning?"
+        "What is the author's family background and cultural influences?"
+
+    3. Establish the connection between the author's achievements and their learnings from them, and their impact on their work today, in terms of:
+      - Daily operations
+      - Communication style
+      - Relationships with stakeholders (clients, employees, partners)
+      - Relationships with family and friends
+      - Decisions made in their career
+      - Relationships with themselves
+      - Content creation
+      - Business decisions
+      - Future planning
+
+    2. ANALYSIS PROTOCOL
+       - Achievements Query is the only section where you query the database
+       - Learnings Query and Current Impact Query are not based on the database, but on the knowledge you gathered from the Achievements Query
+       - For every achievement, you'll consider the evaluation criteria (1-10) to refine your answers up to the best of your knowledge
+
+    3. DOCUMENTATION REQUIREMENTS
+       Each AchievementObject must contain:
+       - Clear, specific achievement name
+       - Current impact examples and anecdotes from the author's life
+
+    QUALITY CONTROL:
+    □ Direct Evidence: Each achievement supported by direct anecdotes from the author's life
+    □ Clear Origins: Specific experiences or development
+    □ Impact Examples: Concrete applications
+    □ Completeness: All fields populated
+    □ Source Links: Clear connection to database content
+
+    EVALUATION CRITERIA (1-10):
+    Context:
+    - 0: The achievement is not supported by any direct evidence from the author's life
+    - 10: The achievement is supported by multiple direct anecdotes from the author's life
+
+    Depth:
+    - 0: Superficial analysis of the achievement with little evidence
+    - 10: Deep analysis of the achievement with many supporting examples with a minimum of 5 sentences discussing the impact on the author today
+
+    Accuracy:
+    - 0: Made up information
+    - 10: Fact, evidence based or inferred directly from the author's life
+
+    CONSTRAINTS:
+    - Use only Query Vector DB tool
+    - One query at a time
+    - Include only verified data
+    - Mark uncertainties as None
+    - 3+ sentences per field
+    - Do not make up any information
+
+    OUTPUT STRUCTURE:
+    Return List[ValueObject] using Pydantic v2 format:
+    ```python
+    class AchievementObject(BaseModel):
+        description: str = Field(..., description="Description of the achievement")
+        
+        @classmethod
+        def default(cls) -> 'AchievementObject':
+            return cls(description="")
+    ```
+
+    CRITICAL RULES:
+    - Use only verified information
+    - Do not make up any information
+    - Clear evidence basis
+    - Practical examples
+    - Only populate the objects of the AchievementObject class
+  expected_output: List of AchievementObject objects for the ContentCreatorInfo model's achievements field. Nothing else.
+  agent: general_research_agent
+
+# Challenges Research
+find_challenges_task:
+  description: >
+    OBJECTIVE:
+    Extract and analyze the content creator's challenges from the database, 
+    documenting how these challenges originated and influenced their current work.
+
+    Only populate the objects of the ChallengeObject class.
+
+    METHODOLOGY:
+    1. Execute those queries sequentially:
+          "What obstacles has the author overcome?"
+          "What lessons came from their setbacks?"
+          "How has their journey shaped their approach?"
+          "What are the challenges that the author faced and how did he overcome them?"
+       
+    2. Evaluate the responses to the above queries to identify the author's core values. Don't query the following questions to the database. You need to ask yourself directly these questions to identify the author's challenges and learnings from them. 
+        "How does the author respond to failures?"
+        "How does the author respond to success?"
+        "What personal traumas, transformative moments happened to the author?"
+        "What was the author educational and social conditioning?"
+        "What is the author's family background and cultural influences?"
+
+    3. Establish the connection between the author's challenges and their learnings from them, and their impact on their work today, in terms of:
+      - Daily operations
+      - Communication style
+      - Relationships with stakeholders (clients, employees, partners)
+      - Relationships with family and friends
+      - Decisions made in their career
+      - Relationships with themselves
+      - Content creation
+      - Business decisions
+      - Future planning
+
+    2. ANALYSIS PROTOCOL
+       - Challenges Query is the only section where you query the database
+       - Learnings Query and Current Impact Query are not based on the database, but on the knowledge you gathered from the Challenges Query
+       - For every challenge, you'll consider the evaluation criteria (1-10) to refine your answers up to the best of your knowledge
+
+    3. DOCUMENTATION REQUIREMENTS
+       Each ChallengeObject must contain:
+       - Clear, specific challenge name
+       - Detailed learnings from the challenge
+       - Current impact examples
+       - Anecdotes from the author's life
+
+    QUALITY CONTROL:
+    □ Direct Evidence: Each challenge supported by direct anecdotes from the author's life
+    □ Clear Origins: Specific experiences or development
+    □ Impact Examples: Concrete applications
+    □ Completeness: All fields populated
+    □ Source Links: Clear connection to database content
+
+    EVALUATION CRITERIA (1-10):
+    Context:
+    - 0: The challenge is not supported by any direct evidence from the author's life
+    - 10: The challenge is supported by multiple direct anecdotes from the author's life
+
+    Depth:
+    - 0: Superficial analysis of the challenge with little evidence
+    - 10: Deep analysis of the challenge with many supporting examples with a minimum of 5 sentences discussing the impact on the author today
+
+    Accuracy:
+    - 0: Made up information
+    - 10: Fact, evidence based or inferred directly from the author's life
+
+    CONSTRAINTS:
+    - Use only Query Vector DB tool
+    - One query at a time
+    - Include only verified data
+    - Mark uncertainties as None
+    - 3+ sentences per field
+    - Do not make up any information
+
+    OUTPUT STRUCTURE:
+    Return List[ValueObject] using Pydantic v2 format:
+    ```python
+    from pydantic import BaseModel, Field
+    
+    class ChallengeObject(BaseModel):
+        description: str = Field(..., description="Description of the challenge")
+        learnings: str = Field(..., description="The lessons the creator learned from the challenge")
+    ```
+
+    CRITICAL RULES:
+    - Use only verified information
+    - Do not make up any information
+    - Clear evidence basis
+    - Practical examples
+    - Only populate the objects of the ChallengeObject class
+  expected_output: List of ChallengeObject objects for the ContentCreatorInfo model's challenges field. Nothing else.
+  agent: general_research_agent
+
+# Life Events Research
+find_life_events_task:
+  description: >
+    OBJECTIVE:
+    Construct a detailed chronological map of the content creator's life events by 
+    systematically querying the database and populating LifeEvent objects with verified 
+    biographical information.
+
+    METHODOLOGY:
+    1. INFORMATION GATHERING
+       Execute the following queries in sequence, analyzing each response before proceeding:
+       a. Primary Life Events Query:
+          "What are the documented major life events, transitions, or pivotal moments 
+          in the content creator's journey?"
+       
+       b. Context Development Query:
+          "How did these identified events specifically influence the creator's:
+          - Personal development
+          - Professional trajectory
+          - Content creation approach
+          - Core values and beliefs?"
+       
+       c. Impact Analysis Query:
+          "What direct connections exist between these life events and:
+          - Current business decisions
+          - Content style and themes
+          - Audience relationship
+          - Professional philosophy?"
+
+    2. ANALYSIS PROTOCOL
+       For each identified life event:
+       - Verify factual accuracy through cross-referencing
+       - Establish clear temporal context
+       - Document direct impact on creator's development
+       - Connect to observable present-day influences
+
+    3. DOCUMENTATION STANDARDS
+       Each LifeEvent object must include:
+       - Precise event name/identifier
+       - Temporal context (when it occurred)
+       - Direct impact on creator's development
+       - Long-term influence on current work/philosophy
+       - Supporting evidence from database
+
+    QUALITY CONTROL:
+    □ Fact Verification: Each detail must be directly supported by database content
+    □ Completeness Check: Each LifeEvent must have all required fields populated
+    □ Impact Analysis: Clear connection between event and creator's development
+    □ Temporal Context: Clear placement in creator's timeline
+    □ Evidence Based: All conclusions tied to specific database entries
+
+    CONSTRAINTS:
+    - Use only the Query Vector DB tool
+    - Execute one query at a time
+    - Maintain strict chronological accuracy
+    - Include only verified information
+    - Mark uncertain information as None
+    - Minimum 4-5 detailed sentences per LifeEvent
+
+    OUTPUT STRUCTURE:
+    Return List[LifeEventObject] where each object contains:
+    ```python
+    class LifeEventObject(BaseModel):
+        name: str
+        description: str
+        year: Optional[int]
+        impact: str
+        evidence: str
+    ```
+
+    CRITICAL REMINDERS:
+    - Maintain strict factual accuracy
+    - No speculative content
+    - Clear evidence linking
+    - Chronological organization
+  expected_output: List of LifeEventObject objects for the ContentCreatorInfo model's life_events field. Nothing else.
+  agent: general_research_agent
+
+find_business_task:
+  description: >
+    OBJECTIVE:
+    Construct a detailed map of the content creator's business and professional journey by 
+    systematically querying the database and populating the BusinessObject with verified information.
+
+    METHODOLOGY:
+    1. INFORMATION GATHERING
+       Execute the following queries in sequence, analyzing each response before proceeding:
+       a. Primary Business Query:
+          "What is the business of the content creator?"
+          "What makes their business unique?"
+          "How do they serve clients?"
+          "How did they start their business?"
+          "Why did they start their business?"
+          "What was the context/environment that triggered the author to decide to change his life around and launch this business?"
+          "What are the tips mentioned in the video that I can implement to grow my business?"
+          "What are the key characteristics of the business of the author and the services I can buy from him?"
+
+    2. ANALYSIS PROTOCOL
+       For each identified business object:
+       - Verify factual accuracy through cross-referencing
+       - Establish clear temporal context
+       - Document direct impact on creator's business journey
+
+    3. DOCUMENTATION STANDARDS
+       The is only one BusinessObject that must include:
+       - Precise business name/identifier
+       - Description of the business
+       - How the business started
+
+    QUALITY CONTROL:
+    □ Fact Verification: Each detail must be directly supported by database content
+    □ Completeness Check: The is only one BusinessObject that must have all required fields populated
+    □ Impact Analysis: Clear connection between object and creator's business journey
+    □ Temporal Context: Clear placement in creator's timeline
+    □ Evidence Based: All conclusions tied to specific database entries
+
+    CONSTRAINTS:
+    - Use only the Query Vector DB tool
+    - Execute one query at a time
+    - Include only verified data
+    - Mark uncertainties as None
+    - Minimum 4-5 detailed sentences per BusinessObject
+
+    OUTPUT STRUCTURE:
+    Model Definition:
+    ```python
+    class BusinessObject(BaseModel):
+        name: str
+        description: str
+        genesis: str
+    ```
+
+    CRITICAL REMINDERS:
+    - Maintain strict factual accuracy
+    - Clear evidence linking
+    - Chronological organization
+  expected_output: A single BusinessObject for the ContentCreatorInfo model's business field. Nothing else.
+  agent: general_research_agent
+
+# Values Research
+find_values_task:
+  description: >
+    OBJECTIVE:
+    Extract and analyze the content creator's core values from the database, 
+    documenting how these values originated and influence their current work.
+
+    Only populate the objects of the ValueObject class.
+
+    METHODOLOGY:
+    1. Behaviours Identification
+       Execute those queries sequentially:
+       a. Core Behaviours Query:
+          "What are the major decisions/actions that the author took in his/her life?"
+          "How did the author react to his/her environment throughout his life?"
+          "How did the author treat himself/herself throughout his life?"
+          "How did the author treat others throughout his/her life?"
+          "What are the core topics that the author talks about with passion and commitment?"
+       
+       Evaluate the responses to the above queries to identify the author's core values.
+       Don't query the following questions to the database. You need to ask yourself directly these questions to identify the author's core values.
+       b. Values Development Query:
+          "How does the author respond to failures?"
+          "How does the author respond to success?"
+          "What principles remain constant across different contexts about the author?"
+          "What compromises is the author unwilling to take?"
+          "What are the core principles that the author adheres to?"
+          "What matters most to the author in their life?"
+          "When faced with a moral dilemma, what guides their decision?"
+
+        Establish the connection between the author's core values and their behaviours, and their impact on their work today, in terms of:
+       c. Current Impact Query:
+          - Daily operations
+          - Communication style
+          - Relationships with stakeholders (clients, employees, partners)
+          - Relationships with family and friends
+          - Decisions made in their career
+          - Relationships with themselves
+          - Content creation
+          - Business decisions
+          - Future planning"
+
+    2. ANALYSIS PROTOCOL
+       - Core Behaviours Query is the only section where you query the database
+       - Values Development Query and Current Impact Query are not based on the database, but on the knowledge you gathered from the Core Behaviours Query
+       - For every value, you'll consider the evaluation criteria (1-10) to refine your answers up to the best of your knowledge
+
+    3. DOCUMENTATION REQUIREMENTS
+       Each ValueObject must contain:
+       - Clear, specific value name
+       - Detailed origin story
+       - Current impact examples
+       - Database evidence
+
+    QUALITY CONTROL:
+    □ Direct Evidence: Each value supported by direct anecdotes from the author's life
+    □ Clear Origins: Specific experiences or development
+    □ Impact Examples: Concrete applications
+    □ Completeness: All fields populated
+    □ Source Links: Clear connection to database content
+
+    EVALUATION CRITERIA (1-10):
+    Context:
+    - 0: The value is not supported by any direct evidence from the author's life
+    - 10: The value is supported by multiple direct anecdotes from the author's life
+
+    Depth:
+    - 0: Superficial analysis of the value with little evidence
+    - 10: Deep analysis of the value with many supporting examples with a minimum of 5 sentences discussing the impact on the author today
+
+    Accuracy:
+    - 0: Made up information
+    - 10: Fact, evidence based or inferred directly from the author's life
+
+    CONSTRAINTS:
+    - Use only Query Vector DB tool
+    - One query at a time
+    - Include only verified data
+    - Mark uncertainties as None
+    - 3+ sentences per field
+    - Do not make up any information
+
+    OUTPUT STRUCTURE:
+    Return List[ValueObject] using Pydantic v2 format:
+    ```python
+    from pydantic import BaseModel, Field
+    
+    class ValueObject(BaseModel):
+        name: str
+        origin: str
+        impact_today: str
+        
+        def model_dump_json(self):
+            return self.model_dump(mode='json')
+    ```
+
+    CRITICAL RULES:
+    - Use only verified information
+    - Do not make up any information
+    - Clear evidence basis
+    - Practical examples
+    - Only populate the objects of the ValueObject class
+  expected_output: List of ValueObject objects for the ContentCreatorInfo model's values field. Nothing else.
+  agent: general_research_agent
+
+
+merge_results_task:
+  description: >
+    Merge all results into a single ContentCreatorInfo object.
+    Here is the `ContentCreatorInfo` model:
+    ```
+            class ValueObject(BaseModel):
+                name: str = Field(
+                    ..., 
+                    description="The name of the value, e.g., 'perseverance'"
+                )
+                origin: str = Field(
+                    ..., 
+                    description="The origin or development of the value, e.g., 'Developed this trait when joining the army and completing the program after 3 attempts'"
+                )
+                impact_today: str = Field(
+                    ..., 
+                    description="How the value impacts how the creator works today, e.g., 'When cold calling people, understands the power of numbers and having to go through a lot of setbacks to get a successful call'"
+                )
+
+                # Add default constructor for error handling
+                @classmethod
+                def default(cls) -> 'ValueObject':
+                    return cls(
+                        name="",
+                        origin="",
+                        impact_today=""
+                    )
+
+            class ChallengeObject(BaseModel):
+                description: str = Field(
+                    ..., 
+                    description="Description of the challenge, e.g., 'Experiencing homelessness in 2009'"
+                )
+                learnings: str = Field(
+                    ..., 
+                    description="The lessons the creator learned from the challenge, e.g., 'Made survival and ruthless prioritization his first priority'"
+                )
+
+                @classmethod
+                def default(cls) -> 'ChallengeObject':
+                    return cls(
+                        description="",
+                        learnings=""
+                    )
+
+            class AchievementObject(BaseModel):
+                description: str = Field(
+                    ..., 
+                    description="Description of the achievement, e.g., 'Founding own creative agency \"On Air\"', 'Speaking at TEDx Conferences'"
+                )
+
+                @classmethod
+                def default(cls) -> 'AchievementObject':
+                    return cls(
+                        description=""
+                    )
+
+            class LifeEventObject(BaseModel):
+                name: str = Field(
+                    ..., 
+                    description="Name or title of the life event, e.g., 'Childhood'"
+                )
+                description: str = Field(
+                    ..., 
+                    description="Description of the life event, e.g., 'Grew up on a quiet island called La Désirade, in Guadeloupe'"
+                )
+
+                @classmethod
+                def default(cls) -> 'LifeEventObject':
+                    return cls(
+                        name="",
+                        description=""
+                    )
+
+            class BusinessObject(BaseModel):
+                name: str = Field(
+                    ..., 
+                    description="Name of the business, e.g., 'Agency \"On Air\"'"
+                )
+                description: str = Field(
+                    ..., 
+                    description="Description of the business, e.g., 'Marketing strategist to drive innovation in large corporates'"
+                )
+                genesis: str = Field(
+                    ..., 
+                    description="How the business started, e.g., 'Started as a freelancer, building out the skills to turn them into an agency in 2010'"
+                )
+
+                @classmethod
+                def default(cls) -> 'BusinessObject':
+                    return cls(
+                        name="",
+                        description="",
+                        genesis=""
+                    )
+
+            class ContentCreatorInfo(BaseModel):
+                life_events: List[LifeEventObject] = Field(
+                    ..., 
+                    description="List of significant life events that shaped the creator's journey"
+                )
+                business: BusinessObject = Field(
+                    ..., 
+                    description="Information about the creator's business or primary professional venture"
+                )
+                values: List[ValueObject] = Field(
+                    ..., 
+                    description="List of the creator's core values that guide their work and life"
+                )
+                challenges: List[ChallengeObject] = Field(
+                    ..., 
+                    description="List of significant challenges faced by the creator and how they overcame them"
+                )
+                achievements: List[AchievementObject] = Field(
+                    ..., 
+                    description="List of the creator's notable achievements and milestones"
+                )
+                first_name: Optional[str] = Field(
+                    None, 
+                    description="The first name of the content creator"
+                )
+                last_name: Optional[str] = Field(
+                    None, 
+                    description="The last name of the content creator"
+                )
+
+                @classmethod
+                def default(cls) -> 'ContentCreatorInfo':
+                    return cls(
+                        first_name="",
+                        last_name="",
+                        life_events=[LifeEventObject.default()],
+                        business=BusinessObject.default(),
+                        values=[ValueObject.default()],
+                        challenges=[ChallengeObject.default()],
+                        achievements=[AchievementObject.default()]
+                    )
+        ```
+  expected_output: A single ContentCreatorInfo object with all the information. If you don't have the information, leave it blank.
+  agent: merge_results_agent
+
+prompting_rag_task:
+  description: >
+    Use the "Prompting RAG Tool" and pass the ContentCreatorInfo object from the previous task to transform the creator information
+    from the pydantic model ContentCreatorInfo into persona-based narratives.
+    The narrative should include all objects across the relevant sections: life_events, achievements, challenges,
+    values, business, tone_of_voice, constraints, and emojis sections. UNLESS the creator does not have an equivalent. 
+    IMPORTANT: DO NOT MAKE UP INFORMATION.
+    Structure guidelines:
+    The [first_name] and [last_name] are the first name and last name of the creator. Use it to start the narrative. (e.g. "Your name is [first_name] [last_name].")
+    The [main_language] is the main language of the creator. Mention it in the narrative (e.g. "And you are French.")
+    The [life_events] is a list of LifeEventObject which covers the creator's life events. Use it to personalize the [persona].
+    The [achievements] is a list of AchievementObject which covers the creator's achievements. Use it to personalize the [persona].
+    The [business] is an object of BusinessObject which covers the creator's business. Use it to personalize the [persona] section of the template.
+    The [challenges] is a list of ChallengeObject which covers the creator's challenges. Use it to personalize the text.
+    The [values] is a list of ValueObject which covers the creator's values. Use it to personalize the text.
+    IMPORTANT: The list of [values] should include:
+    - [value_1] is the value [name] (e.g., "value of money ")
+    - [context] is how it should be used within interactions between the creators and his/her audience (e.g., "Use this value when the conversation involves the generation of profit and money")
+    - [description] is the story behind the value (e.g., "At 13 years old, your parents divorced after your father lost his job. The house was sold, and you ended up with your mother in a small suburban studio. This period triggered in you an awareness of the value of money, which you apply today in your interactions.")
+    - [usage] is how the value is used in the creator's daily work and life (e.g., " In your conversations, you demonstrate an awareness of the value of money, you are clear-headed, and you do not have delusions of grandeur.")
+    The [ton_of_voice] section depicts how the creator should interact, in different scenarios with his/her audience (e.g. You write short messages, similar to a DM you'd send on social media. Use a professional but accessible tone that emphasizes efficiency. You use emojis to convey emotion with the client (not in every message and maximum 1 emoji per message))
+    IMPORTANT: The [ton_of_voice] section is a list of strings, each string is a different scenario of how the creator should interact with his/her audience. It should be inferred from the creator's information. See templates for examples.
+    The [constraints] section depicts the constraints the creator has in his/her interactions with his/her audience, and the formatting he/she can use (e.g. You are a freelancer and you can only work with clients from Europe. You can only work with clients from Europe. Share links without any formatting.)
+    IMPORTANT: The [constraints] section is a list of strings, each string is a different constraint the creator has. See templates for examples. They're quite generic, but infer some additional constraints if you think there is a need for it.
+    The [emojis] section depicts the emojis the creator can use in his/her interactions with his/her audience (e.g. You can use emojis to convey emotion with the client (not in every message and maximum 1 emoji per message))
+    IMPORTANT: The [emojis] section is a list of strings, each string is a different emoji the creator can use. It should be inferred from the creator's information. See templates for examples.
+
+    Text guidelines:
+    Create a new text that follows the same structure and style as the templates but uses the creator's information.
+    IMPORTANT: Maintain a second-person narrative perspective. Meaning you should use "you" when writing the text.
+    Derive the tone and style based on the creator's information
+    Incorporate key details about the creator's journey, values, and achievements
+    Create a cohesive narrative that flows naturally
+    Keep similar length and structure as the templates. There are 2 different templates for reference.
+    If the ContentCreatorInfo does not contain the info for a section, do not mention it.
+    Do NOT make up information.
+    Do NOT use info from the templates that is not in the ContentCreatorInfo.
+    SUPER IMPORTANT: DO NOT FORGET TO INCLUDE ALL OF THE OBJECTS ACROSS THE RELEVANT SECTIONS OF THE TEXT. ALL SECTIONS SHOULD BE INCLUDED AND PERSONALISED.
+  expected_output: "The output narrative about the creator, using the creator's information and following the template structure."
+  agent: prompting_rag_agent
