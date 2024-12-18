@@ -170,30 +170,6 @@ def save_output_to_markdown(output, filename="creatorOutputSimple.md"):
     except Exception as e:
         print(f"Error saving to markdown file: {str(e)}")
         return False
-# def save_output_to_markdown(crew_output, filename="creatorOutputSimple.md"):
-#     """
-#     Save crew output to a markdown file with proper error handling.
-#     """
-#     try:
-#         with open(filename, "w", encoding="utf-8") as md_file:
-#             md_file.write("# Creator Analysis Output\n\n")
-#             md_file.write(f"## Raw Output\n\n```\n{crew_output.raw}\n```\n\n")
-            
-#             if crew_output.json_dict:
-#                 md_file.write(f"## JSON Output\n\n```json\n{json.dumps(crew_output.json_dict, indent=2)}\n```\n\n")
-            
-#             if crew_output.pydantic:
-#                 md_file.write(f"## Pydantic Output\n\n```\n{crew_output.pydantic}\n```\n\n")
-            
-#             md_file.write(f"## Tasks Output\n\n```\n{crew_output.tasks_output}\n```\n\n")
-#             md_file.write(f"## Token Usage\n\n```\n{crew_output.token_usage}\n```\n")
-            
-#         return True
-#     except Exception as e:
-#         print(f"Error saving to markdown file: {str(e)}")
-#         return False
-
-# ----------------------------------------------------------------------
 
 from typing import List, Optional, Dict, Any
 from pydantic import BaseModel, Field
@@ -444,45 +420,6 @@ def merge_and_validate_content(crew_result: Any, instagram_info: str) -> Content
         
         # Return a properly initialized default object
         return ContentCreatorInfo.default()
-    
-# def run():
-#     """
-#     Process YouTube and Instagram content and merge them.
-#     """
-#     try:
-#         # Get YouTube handle
-#         youtube_channel_handle = input("Please enter the YouTube channel handle to analyze:\n").strip()
-        
-#         if not youtube_channel_handle:
-#             raise ValueError("YouTube channel handle cannot be empty")
-            
-#         inputs = {
-#             "youtube_channel_handle": youtube_channel_handle
-#         }
-        
-#         # Run the crew
-#         crew_result = YoutubeCrew().crew().kickoff(inputs=inputs)
-        
-#         # Save crew output
-#         if hasattr(crew_result, 'raw'):
-#             save_output_to_markdown(crew_result, "crew_output.md")
-        
-#         # Merge and validate content
-#         merged_model = merge_and_validate_content(crew_result, instagram_info)
-        
-#         # Save merged model
-#         save_output_to_markdown(merged_model, "merged_output.md")
-        
-#         # Print the merged model using the new method
-#         print("\nMerged Content Creator Info:")
-#         print(merged_model.model_dump_json(indent=2))
-        
-#         return merged_model
-        
-#     except Exception as e:
-#         print(f"An unexpected error occurred: {str(e)}")
-#         # Return default object instead of exiting
-#         return ContentCreatorInfo.default()
 
 def run():
     """
