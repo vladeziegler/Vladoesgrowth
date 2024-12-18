@@ -7,9 +7,7 @@ from pydantic import BaseModel, Field
 from crewai_tools.tools.base_tool import BaseTool
 import openai
 import os
-# import streamlit as st
-# import streamlit as st
-# OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+
 import streamlit as st
 OPENAI_API_KEY = st.secrets["OPENAI_API_KEY"]
 
@@ -236,12 +234,6 @@ class PromptingRagToolInput(BaseModel):
 
     class Config:
         arbitrary_types_allowed = True
-# class PromptingRagToolInput(BaseModel):
-#     """Input for PromptingRagTool."""
-#     input_string: Union[str, Dict[str, Any], ContentCreatorInfo] = Field(
-#         ..., 
-#         description="ContentCreatorInfo object, dictionary, or string representation"
-#     )
 
 class PromptingRagTool(BaseTool):
     name: str = "Prompting RAG Tool"
@@ -652,81 +644,6 @@ class PromptingRagTool(BaseTool):
         except Exception as e:
             print(f"Error in _process_input: {str(e)}")
             return ContentCreatorInfo.default()
-
-    # def _process_input(self, input_data: Union[str, Dict[str, Any], ContentCreatorInfo]) -> ContentCreatorInfo:
-    #     """Process different input types into ContentCreatorInfo."""
-    #     try:
-    #         if isinstance(input_data, ContentCreatorInfo):
-    #             return input_data
-            
-    #         if isinstance(input_data, str):
-    #             try:
-    #                 parsed_data = json.loads(input_data)
-    #                 if isinstance(parsed_data, dict) and 'input_string' in parsed_data:
-    #                     input_data = parsed_data['input_string']
-    #                     if isinstance(input_data, str):
-    #                         input_data = json.loads(input_data)
-    #             except json.JSONDecodeError:
-    #                 return self._extract_content_creator_info(input_data)
-
-    #         if not isinstance(input_data, dict):
-    #             raise ValueError(f"Expected dictionary, got {type(input_data)}")
-
-    #         # Extract name fields properly
-    #         full_name = input_data.get('name', '')
-    #         if isinstance(full_name, str) and full_name:
-    #             name_parts = full_name.split(None, 1)
-    #             first_name = name_parts[0] if name_parts else ''
-    #             last_name = name_parts[1] if len(name_parts) > 1 else ''
-    #         else:
-    #             first_name = input_data.get('first_name', '')
-    #             last_name = input_data.get('last_name', '')
-
-    #         # Transform the input data without placeholders
-    #         transformed_data = {
-    #             'first_name': first_name,
-    #             'last_name': last_name,
-    #             'full_name': full_name,
-    #             'business': {
-    #                 'name': input_data.get('business', {}).get('name', ''),
-    #                 'description': input_data.get('business', {}).get('description', ''),
-    #                 'genesis': input_data.get('business', {}).get('genesis', '')
-    #             },
-    #             'values': [
-    #                 {
-    #                     'name': value.get('name', ''),
-    #                     'origin': value.get('origin', ''),
-    #                     'impact_today': value.get('impact_today', '')
-    #                 }
-    #                 for value in input_data.get('values', [])
-    #             ],
-    #             'challenges': [
-    #                 {
-    #                     'description': challenge.get('description', ''),
-    #                     'learnings': challenge.get('learnings', '')
-    #                 }
-    #                 for challenge in input_data.get('challenges', [])
-    #             ],
-    #             'achievements': [
-    #                 {
-    #                     'description': achievement.get('description', '')
-    #                 }
-    #                 for achievement in input_data.get('achievements', [])
-    #             ],
-    #             'life_events': [
-    #                 {
-    #                     'name': event.get('name', ''),
-    #                     'description': event.get('description', '')
-    #                 }
-    #                 for event in input_data.get('life_events', [])
-    #             ]
-    #         }
-
-    #         return ContentCreatorInfo(**transformed_data)
-
-    #     except Exception as e:
-    #         print(f"Error in _process_input: {str(e)}")
-    #         raise ValueError(f"Error processing input: {str(e)}")
 
     def _format_content_creator_info(self, info: ContentCreatorInfo) -> str:
         """Format ContentCreatorInfo into a readable string."""

@@ -11,7 +11,7 @@ from tools.FetchRelevantVideosFromYouTubeChannelTool import FetchRelevantVideosF
 from tools.AddVideoToVectorDBTool import AddVideoToVectorDBTool
 from tools.QueryVectorDBTool import QueryVectorDBTool
 
-from    tools.FetchToAddInstagramAudioTool import FetchToAddInstagramAudioTool
+from tools.FetchToAddInstagramAudioTool import FetchToAddInstagramAudioTool
 from tools.QueryInstagramDBTool import QueryInstagramDBTool
 
 from tools.PromptingRagTool import PromptingRagTool

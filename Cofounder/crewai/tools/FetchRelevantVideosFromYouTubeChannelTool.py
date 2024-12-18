@@ -109,53 +109,6 @@ class FetchRelevantVideosFromYouTubeChannelTool(BaseTool):
             return error_message
 
 
-    # def _run(
-    #     self,
-    #     youtube_channel_handle: str,
-    # ) -> Optional[FetchRelevantVideosFromYouTubeChannelOutput]:
-    #     api_key = YOUTUBE_API_KEY
-    #     if not api_key:
-    #         raise ValueError("YOUTUBE_API_KEY environment variable is not set")
-
-    #     try:
-    #         channel_id = self.get_channel_id(youtube_channel_handle, api_key)
-    #         if channel_id is None:
-    #             return None
-                
-    #         all_videos = self.fetch_all_videos(channel_id, api_key)
-    #         video_details = self.fetch_video_details(all_videos, api_key)
-
-    #         videos = []
-    #         for video_id, details in video_details.items():
-    #             snippet = details.get("snippet", {})
-    #             statistics = details.get("statistics", {})
-
-    #             if self.is_short_video(snippet):
-    #                 continue
-
-    #             videos.append(
-    #                 VideoInfo(
-    #                     video_id=video_id,
-    #                     title=snippet.get("title", ""),
-    #                     description=snippet.get("description", ""),
-    #                     publish_date=datetime.fromisoformat(
-    #                         snippet.get("publishedAt", "").replace("Z", "+00:00")
-    #                     ).astimezone(timezone.utc),
-    #                     video_url=f"https://www.youtube.com/watch?v={video_id}",
-    #                     category_id=snippet.get("categoryId", ""),
-    #                     view_count=int(statistics.get("viewCount", 0)),
-    #                     like_count=int(statistics.get("likeCount", 0))
-    #                 )
-    #             )
-
-    #         popular_videos = sorted(videos, key=lambda v: v.view_count, reverse=True)[:50]
-    #         ranked_videos = self.rank_videos(popular_videos)
-    #         return FetchRelevantVideosFromYouTubeChannelOutput(videos=ranked_videos[:10])
-
-    #     except Exception as e:
-    #         print(f"Error processing channel {youtube_channel_handle}: {str(e)}")
-    #         return None
-
     def get_channel_id(self, youtube_handle: str, api_key: str) -> Optional[str]:
         url = "https://www.googleapis.com/youtube/v3/search"
         params = {
@@ -360,11 +313,7 @@ class FetchRelevantVideosFromYouTubeChannelTool(BaseTool):
                 summary += f"URL: {video.video_url}\n"
 
             return summary
-        # except Exception as e:
-        #     error_message = f"Error processing channel {youtube_handle}: {str(e)}"
-        #     print(f"Full error details: {type(e).__name__}: {str(e)}")
-        #     print(f"Details at error: {details}")  # This will show us the exact state of the data
-        #     return error_message
+
         except Exception as e:
             error_message = f"Error processing channel {youtube_handle}: {str(e)}"
             print(f"Full error details: {type(e).__name__}: {str(e)}")
@@ -511,50 +460,5 @@ class FetchRelevantVideosFromYouTubeChannelTool(BaseTool):
             except Exception as e:
                 print(f"Error with Groq API for video {video.title}: {str(e)}")
                 video.relevance_score = 0
-
-        return sorted(videos, key=lambda v: v.relevance_score, reverse=True)
-    # def rank_videos(self, videos: List[VideoInfo]) -> List[VideoInfo]:
-    #     groq_client = Groq(api_key=GROQ_API_KEY)
-        
-    #     for video in videos:
-    #         prompt = f"""
-    #         Rate how likely this video is to cover the personal story of its creator. Respond with a single number from 0 to 10, where 0 means not at all likely and 10 means extremely likely.
-
-    #         A score of 1 means it's purely promotional or unrelated to personal stories.
-    #         A score of 10 means it's a deep, meaningful personal story or reflection.
-
-    #         Title: {video.title}
-    #         Description: {video.description}
-
-    #         Rating (0-10):
-    #         Respond with ONLY a single number between 1 and 10, with no additional text, explanation, or newlines.
-    #         Example correct response: 7
-    #         """
-
-    #         try:
-    #             response = groq_client.chat.completions.create(
-    #                 # model="llama-3.1-70b-versatile",
-    #                 model="mixtral-8x7b-32768",
-    #                 messages=[
-    #                     {"role": "system", "content": "You are an AI that rates videos based on their relevance to the creator's personal story. Respond only with a number from 0 to 10."},
-    #                     {"role": "user", "content": prompt}
-    #                 ],
-    #                 max_tokens=5,
-    #                 temperature=0.1
-    #             )
-
-    #             score_text = response.choices[0].message.content.strip()
-    #             try:
-    #                 score = float(score_text)
-    #                 if 0 <= score <= 10:
-    #                     video.relevance_score = score * 10
-    #                 else:
-    #                     raise ValueError(f"Score out of range: {score}")
-    #             except ValueError:
-    #                 print(f"Failed to parse score for video {video.title}: {score_text}")
-    #                 video.relevance_score = 0
-    #         except Exception as e:
-    #             print(f"Error with Groq API for video {video.title}: {str(e)}")
-    #             video.relevance_score = 0
 
         return sorted(videos, key=lambda v: v.relevance_score, reverse=True)
