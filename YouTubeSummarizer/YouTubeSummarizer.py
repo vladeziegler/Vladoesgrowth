@@ -19,46 +19,6 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-# Configuration for embedchain
-# config = {
-#     'llm': {
-#         'provider': 'openai',
-#         'config': {
-#             'model': 'gpt-4o-mini',
-#             'temperature': 0.4,
-#             'api_key': 'YOUR_OPENAI_API_KEY_HERE',
-#             'prompt': """
-#             Analyze the following content and help me understand the video.
-#             Be as detailed as possible.
-#             Provide bullet points and key points.
-#             Give me also quotes or comments from the video to back up your points.
-            
-#             Context: $context
-            
-#             Query: $query
-            
-#             Response:""",
-#             'system_prompt': """
-#             You are a helpful assistant that can analyze videos and provide detailed summaries. You want to help me find the best features of the video. Figure out what are the main points and the key takeaways.
-#             """
-#         }
-#     }
-# }
-
-# class YouTubeAnalyzer:
-#     def __init__(self):
-#         logger.info("Initializing YouTubeAnalyzer...")
-#         print("Setting up analyzer with OpenAI API key...")
-#         # config['llm']['config']['api_key'] = openai_api_key
-#         try:
-#             self.app = App.from_config(config=config)
-#             logger.info("Successfully initialized embedchain App")
-#             print("✓ Analyzer setup complete")
-#         except Exception as e:
-#             logger.error(f"Failed to initialize embedchain App: {str(e)}")
-#             print(f"✗ Error during setup: {str(e)}")
-#             raise
-
 config = {
     'llm': {
         'provider': 'openai',

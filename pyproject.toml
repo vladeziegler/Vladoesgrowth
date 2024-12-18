@@ -1,0 +1,49 @@
+[tool.poetry]
+name = "Find your cofounder"
+version = "0.1.0"
+description = "Find your cofounder using crewAI"
+authors = ["Vladimir de Ziegler <vladimirdeziegler@gmail.com>"]
+
+[tool.poetry.dependencies]
+python = ">=3.11,<3.12"
+pyyaml = "^6.0"
+python-dotenv = "1.0.0"
+firecrawl-py = "^0.0.20"
+embedchain = "0.1.124"
+ollama = "^0.2.1"
+requests = "^2.31.0"
+groq = "^0.11.0"
+openai = "^1.12.0"
+streamlit = "^1.31.0"
+instaloader = "^4.10.2"
+moviepy = "^1.0.3"
+youtube-transcript-api = "^0.6.2"
+beautifulsoup4 = "^4.12.3"
+pydub = "^0.25.1"
+deepgram-sdk = "^3.1.5"
+typing-extensions = "^4.9.0"
+ast-decompiler = "^0.7.0"
+validators = "0.22.0"
+ffmpeg-python = "0.2.0"
+python-ffmpeg = "2.0.10"
+pysqlite3-binary = "^0.5.4"
+crewai = "0.76.9"
+crewai-tools = "^0.13.4"
+asyncio = "^3.4.3"
+plotly = "^5.19.0"
+google-auth = "*"
+google-auth-oauthlib = "*"
+google-auth-httplib2 = "*"
+google-api-python-client = "*"
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.pyright]
+useLibraryCodeForTypes = true
+exclude = [".cache"]
+
+[tool.ruff]
+select = ['E', 'W', 'F', 'I', 'B', 'C4', 'ARG', 'SIM']
+ignore = ['W291', 'W292', 'W293']
