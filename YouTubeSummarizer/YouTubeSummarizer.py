@@ -8,7 +8,8 @@ from embedchain import App
 from pydantic import BaseModel, Field
 import sys
 import streamlit as st
-
+OPENAI_API_KEY = "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"
+# OPENAI_API_KEY = st.secrets["OPENAI_API_KEY"]
 # Set up detailed logging
 logging.basicConfig(
     level=logging.INFO,
@@ -25,7 +26,7 @@ config = {
         'config': {
             'model': 'gpt-4o-mini',
             'temperature': 0.4,
-            'api_key': st.secrets["OPENAI_API_KEY"],  # Set in YouTubeAnalyzer.__init__
+            'api_key': OPENAI_API_KEY,  # Set in YouTubeAnalyzer.__init__
             # 'api_key': openai_api_key,
             'prompt': """
             Analyze the following content and answer the queries based on the content.
@@ -181,13 +182,13 @@ class YouTubeAnalyzer:
 def main():
     st.title("YouTube Video Analysis for Product Insights")
     
-    openai_api_key = st.secrets["OPENAI_API_KEY"]
+    # openai_api_key = st.secrets["OPENAI_API_KEY"]
     youtube_url = st.text_input("Enter YouTube video URL:")
     audience = st.text_input("Enter audience:")
     
-    if not openai_api_key or not youtube_url:
-        st.warning("Please provide both OpenAI API key and YouTube URL")
-        return
+    # if not openai_api_key or not youtube_url:
+        # st.warning("Please provide both OpenAI API key and YouTube URL")
+        # return
         
     if st.button("Analyze Video"):
         with st.spinner("Processing video..."):
