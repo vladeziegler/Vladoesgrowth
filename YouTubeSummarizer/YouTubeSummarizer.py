@@ -8,7 +8,9 @@ from embedchain import App
 from pydantic import BaseModel, Field
 import sys
 import streamlit as st
-OPENAI_API_KEY = "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"
+import os
+
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 # OPENAI_API_KEY = st.secrets["OPENAI_API_KEY"]
 # Set up detailed logging
 logging.basicConfig(
