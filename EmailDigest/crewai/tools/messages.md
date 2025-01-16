@@ -1,1 +1,0 @@
-{"messages":[{"sender":"sender 1","subject":"subject 1","body":"body 1","summary":"summary 1"},{"sender":"sender 2","subject":"subject 2","body":"body 2","summary":"summary 2"}]}
