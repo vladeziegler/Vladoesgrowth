@@ -1,0 +1,27 @@
+# Virtual Environment
+.venv/
+venv/
+env/
+**/venv/
+**/.venv/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+**/__pycache__/
+
+# Distribution / packaging
+dist/
+build/
+*.egg-info/
+
+# Large binary files
+*.dylib
+*.so
+*.pyd
+
+# IDE
+.vscode/
+.idea/ 
