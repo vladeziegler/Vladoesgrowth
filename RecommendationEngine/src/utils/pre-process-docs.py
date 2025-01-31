@@ -73,10 +73,12 @@ def extract_chunk_info(chunks):
                             current_entry = {
                                 "row_id": row_id,
                                 "metadata": {
-                                    "type": None,
-                                    "country": None,
-                                    "release_year": None,
-                                    "listed_in": None,
+                                    "company_activity": None,
+                                    "task": None,
+                                    "location": None,
+                                    "role": None,
+                                    "hours_saved": None,
+                                    "money_saved": None,
                                 },
                                 "text": {},
                             }
@@ -84,16 +86,17 @@ def extract_chunk_info(chunks):
 
                         # Map values to appropriate fields
                         col_mapping = {
-                            "1": ("metadata", "type"),
-                            "5": ("metadata", "country"),
-                            "7": ("metadata", "release_year"),
-                            "10": ("metadata", "listed_in"),
+                            "1": ("metadata", "role"),
+                            "2": ("metadata", "location"),
+                            "3": ("metadata", "company_activity"),
+                            "4": ("metadata", "task"),
+                            "5": ("metadata", "hours_saved"),
+                            "6": ("metadata", "money_saved"),
                         }
 
                         text_fields = {
-                            "2": "title",
-                            "3": "director",
-                            "11": "description",
+                            "5": "money_saved",
+                            "6": "hours_saved",
                         }
 
                         if col_id in col_mapping:
@@ -118,13 +121,12 @@ def extract_chunk_info(chunks):
 
 # if __name__ == "__main__":
 #     data = generate_chunks_and_metadata(
-#         file_path="/Users/lorenzejay/workspace/agentic_rag_example/agentic_rag_example/sources/netflix_trimmed.xlsx"
 #     )
 #     print("data", data)
 
 if __name__ == "__main__":
     data = generate_chunks_and_metadata(
-        file_path="/Users/lorenzejay/workspace/agentic_rag_example/agentic_rag_example/sources/netflix_data.xlsx"
+        file_path="/Users/vladimirdeziegler/text_crewai/Vladoesgrowth/RecommendationEngine/sources/agents_data.xlsx"
     )
     print("data", data)
     client = weaviate.connect_to_weaviate_cloud(
@@ -135,7 +137,7 @@ if __name__ == "__main__":
     print("client ready", client.is_ready())  # Should print: `True`
     if client.is_ready():
         netflix_data = client.collections.create(
-            name="netflix_data_system_2",
+            name="agents_data",
             vectorizer_config=Configure.Vectorizer.text2vec_openai(
                 model="text-embedding-3-small",
             ),
@@ -148,13 +150,13 @@ if __name__ == "__main__":
             for d in data:
                 batch.add_object(
                     {
-                        "title": d["text"]["title"],
-                        "director": d["text"].get("director", "N/A"),
-                        "description": d["text"].get("description", "N/A"),
-                        "type": d["metadata"]["type"],
-                        "country": d["metadata"]["country"],
-                        "release_year": d["metadata"]["release_year"],
-                        "listed_in": d["metadata"]["listed_in"],
+                        
+                        "company_activity": d["metadata"]["company_activity"],
+                        "task": d["metadata"]["task"],
+                        "location": d["metadata"]["location"],
+                        "role": d["metadata"]["role"],
+                        "hours_saved": d["metadata"]["hours_saved"],
+                        "money_saved": d["metadata"]["money_saved"],
                     }
                 )
         print("successfully added in docs")

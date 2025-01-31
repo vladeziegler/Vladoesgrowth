@@ -21,6 +21,3 @@ test = "RecommendationEngine.main:test"
 [build-system]
 requires = ["hatchling"]
 build-backend = "hatchling.build"
-
-[tool.uv.sources]
-RecommendationEngine = { path = "/Users/lorenzejay/Documents/Uplift Digital Solutions/clients/crewai-org/crewAI", editable = true }

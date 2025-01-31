@@ -125,7 +125,7 @@ if __name__ == "__main__":
     tool = WeaviateVectorSearchTool(
         weaviate_cluster_url=os.environ.get("WEAVIATE_URL"),
         weaviate_api_key=os.environ.get("WEAVIATE_API_KEY"),
-        collection_name="netflix_data_system_2",
+        collection_name="YOUR_COLLECTION_NAME",
     )
-    result = tool.run("Find me similar shows to How I Met Your Mother?")
+    result = tool.run("Find me the best use cases for AI agents?")
     print("result", result)

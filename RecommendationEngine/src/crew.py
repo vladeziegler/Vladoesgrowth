@@ -1,10 +1,69 @@
 import os
 from crewai import Agent, Crew, Process, Task
 from crewai.project import CrewBase, agent, crew, task, before_kickoff
-from agentic_rag_example.tools.weaviate_vector_search_tool import (
+from tools.weaviate_vector_search_tool import (
     WeaviateVectorSearchTool,
 )
 from crewai_tools import EXASearchTool
+
+from pydantic import BaseModel, Field
+from typing import Optional, List
+
+class AgentObject(BaseModel):
+    company_activity: str = Field(
+        ..., 
+        description="The company activity, e.g., 'Software development'"
+    )
+    task: str = Field(
+        ..., 
+        description="The task, e.g., 'Receiving calls and handling customer complaints'"
+    )
+    location: str = Field(
+        ..., 
+        description="The location, e.g., 'New York'"
+    )
+    role: str = Field(
+        ..., 
+        description="The role, e.g., 'Sales Manager'"
+    )
+    hours_saved: float = Field(
+        ..., 
+        description="The hours saved, e.g., 10"
+    )
+    money_saved: float = Field(
+        ..., 
+        description="The money saved, e.g., 1000"
+    )
+
+    market_size: Optional[float] = Field(
+        None, 
+        description="The market size, e.g., 1000000"
+    )
+
+    market_category: Optional[str] = Field(
+        None, 
+        description="The category of the market, e.g., 'HVAC serving the B2B market in Canada'"
+    )
+
+    market_growth: Optional[float] = Field(
+        None, 
+        description="The yearly growth rate of the market in percentage, e.g., 10%"
+    ),
+    market_challenges: Optional[str] = Field(
+        None, 
+        description="The set of key challenges the market is currently facing, e.g., 'The HVAC industry is facing a shortage of skilled workers'"
+    ),
+    market_notes: Optional[str] = Field(
+        None, 
+        description="The various key information that are necessary to understand the market, e.g., 'The HVAC industry is driven by energy efficiency and sustainability measures.'"
+    )
+
+
+class AgentObjectList(BaseModel):
+    agents: List[AgentObject] = Field(
+        ..., 
+        description="A list of AgentObjects"
+    )
 # If you want to run a snippet of code before or after the crew starts,
 # you can use the @before_kickoff and @after_kickoff decorators
 # https://docs.crewai.com/concepts/crews#example-crew-class-with-decorators
@@ -57,9 +116,7 @@ class AgenticRagExample:
     def report_agent(self) -> Agent:
         return Agent(config=self.agents_config["report_agent"], verbose=True)
 
-    # To learn more about structured task outputs,
-    # task dependencies, and task callbacks, check out the documentation:
-    # https://docs.crewai.com/concepts/tasks#overview-of-a-task
+
     @task
     def rag_task(self) -> Task:
         return Task(
@@ -79,8 +136,6 @@ class AgenticRagExample:
     @crew
     def crew(self) -> Crew:
         """Creates the AgenticRagExample crew"""
-        # To learn how to add knowledge sources to your crew, check out the documentation:
-        # https://docs.crewai.com/concepts/knowledge#what-is-knowledge
 
         return Crew(
             agents=self.agents,  # Automatically created by the @agent decorator
