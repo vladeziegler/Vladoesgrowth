@@ -1,0 +1,26 @@
+[project]
+name = "RecommendationEngine"
+version = "0.1.0"
+description = "RecommendationEngine using crewAI"
+authors = [{ name = "Vladimir", email = "vladimir@elementsagents.com" }]
+requires-python = ">=3.10,<=3.13"
+dependencies = [
+    "crewai-tools>=0.32.1",
+    "crewai[tools]>=0.86.0,<1.0.0",
+    "docling>=2.15.1",
+    "weaviate-client>=4.10.4",
+]
+
+[project.scripts]
+RecommendationEngine = "RecommendationEngine.main:run"
+run_crew = "RecommendationEngine.main:run"
+train = "RecommendationEngine.main:train"
+replay = "RecommendationEngine.main:replay"
+test = "RecommendationEngine.main:test"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.uv.sources]
+RecommendationEngine = { path = "/Users/lorenzejay/Documents/Uplift Digital Solutions/clients/crewai-org/crewAI", editable = true }
