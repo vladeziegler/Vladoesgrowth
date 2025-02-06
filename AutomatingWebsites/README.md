@@ -7,7 +7,7 @@ This tutorial demonstrates how to create an AI agent that logs into platforms (l
 
 ## Overview
 
-In this tutorial, Vlad (the founder of Elements Agents) walks you through:
+In this tutorial, I'll wals you through:
 - **Creating a user session:** Authenticate and register your session on Anchor Browser.
 - **Scraping content:** Automate the extraction of posts (with details such as author, time, likes, views, and comments) from your target platform.
 - **LLM-based parsing:** Convert raw content into a structured JSON format.
