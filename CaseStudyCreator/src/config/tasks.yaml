@@ -1,0 +1,565 @@
+database_manager_task:
+  description: Reset the vector database when using the "Reset Database" tool.
+  expected_output: Successfully reset the vector database.
+  agent: database_manager_agent
+
+# Video Processing
+process_video_task:
+  description: >
+    Process the video url here {youtube_url} is found.
+    - Add videos to the vector database
+    - Ensure each video is properly added
+    - All information must come directly from the searches
+    - Do not make up any information
+    IMPORTANT: if {youtube_channel_handle} not found, DO NOT use tool "Add Video to Vector DB", and move on to the next task.
+  expected_output: Successfully add the videos to the vector database.
+  agent: vector_db_agent
+
+executive_summary_task:
+  description: >
+    OBJECTIVE:
+    Extract and analyze key business information to create a compelling executive summary
+    that captures the essence of the transformation case study.
+
+    Only populate the objects of the ExecutiveSummary class.
+
+    METHODOLOGY:
+    1. Execute these queries sequentially:
+          "What industry does the client operate in?"
+          "What is the size and scale of the company?"
+          "What is their core business function?"
+          "What was the primary challenge they faced?"
+          "What solution was implemented?"
+          "What were the key measurable results?"
+       
+    2. Evaluate responses to identify:
+        - Industry classification and market position
+        - Company scale and operational scope
+        - Core business activities and value proposition
+        - Critical business challenges
+        - Solution implementation highlights
+        - Key performance improvements
+
+    3. Establish connections between:
+      - Industry context and specific challenges
+      - Company size and solution scalability
+      - Core business needs and implemented solutions
+      - Problems and measurable outcomes
+
+    QUALITY CONTROL:
+    □ Industry Accuracy: Correct industry classification
+    □ Size Verification: Clear company scale indicators
+    □ Business Clarity: Well-defined core activities
+    □ Problem Precision: Specific challenge description
+    □ Solution Focus: Clear implementation summary
+    □ Result Validation: Verified outcome metrics
+
+    EVALUATION CRITERIA (1-10):
+    Accuracy:
+    - 0: Unverified or incorrect information
+    - 10: Fully verified and accurate details
+
+    Completeness:
+    - 0: Missing key summary elements
+    - 10: All essential elements included with proper context
+
+    Clarity:
+    - 0: Vague or unclear descriptions
+    - 10: Clear, specific, and actionable information
+
+    CONSTRAINTS:
+    - Use only verified data
+    - Mark uncertainties as None
+    - Each field must be complete and specific
+    - No invented information
+    - Minimum 3 sentences per field
+
+    OUTPUT STRUCTURE:
+    Return ExecutiveSummary object using Pydantic v2 format:
+    ```python
+    class ExecutiveSummary(BaseModel):
+        industry: str = Field(..., description="Client's industry, e.g., 'Healthcare'")
+        company_size: str = Field(..., description="Size of the company, e.g., 'mid-sized'")
+        core_business: str = Field(..., description="Main business activity of the client")
+        problem_snapshot: str = Field(..., description="Brief description of the main problem")
+        solution_snapshot: str = Field(..., description="Brief description of the implemented solution")
+        result_snapshot: str = Field(..., description="Key results achieved")
+    ```
+
+    CRITICAL RULES:
+    - Use only verified information
+    - Do not make up any information
+    - Clear evidence basis
+    - Practical examples
+  expected_output: ExecutiveSummary object for the CaseStudy model's executive_summary field. Nothing else.
+  agent: general_research_agent
+
+challenge_analysis_task:
+  description: >
+    OBJECTIVE:
+    Extract and analyze specific business challenges, inefficiencies, and goals,
+    documenting quantifiable impacts and desired outcomes.
+
+    Only populate the objects of the Challenge class.
+
+    METHODOLOGY:
+    1. Execute these queries sequentially:
+          "What specific workflows or processes were causing inefficiencies?"
+          "What were the quantifiable losses in time, cost, and opportunities?"
+          "What specific goals did the client set for improvement?"
+          "What metrics were they trying to impact?"
+          "What were the critical pain points in their operations?"
+       
+    2. Evaluate responses to identify:
+        - Core operational inefficiencies
+        - Financial and resource impacts
+        - Productivity bottlenecks
+        - Goal alignment with business needs
+        - Priority of different challenges
+
+    3. Establish connections between:
+      - Workflows and their impacts
+      - Inefficiencies and business goals
+      - Pain points and desired outcomes
+      - Current state and improvement targets
+
+    QUALITY CONTROL:
+    □ Process Clarity: Clear description of inefficient workflows
+    □ Impact Quantification: Specific metrics for losses
+    □ Goal Precision: Well-defined improvement targets
+    □ Pain Point Validation: Verified operational challenges
+    □ Metric Accuracy: Correct baseline measurements
+
+    EVALUATION CRITERIA (1-10):
+    Detail:
+    - 0: Vague or general problem descriptions
+    - 10: Specific, well-documented challenges
+
+    Quantification:
+    - 0: No measurable impacts identified
+    - 10: Fully quantified losses and targets
+
+    Verification:
+    - 0: Unverified challenges
+    - 10: Fully verified problems and impacts
+
+    CONSTRAINTS:
+    - Use only verified data
+    - Mark uncertainties as None
+    - Each pain point must have quantifiable impact
+    - No invented information
+    - Minimum 3 items per list field
+
+    OUTPUT STRUCTURE:
+    Return Challenge object using Pydantic v2 format:
+    ```python
+    class Challenge(BaseModel):
+        pain_points: List[str] = Field(..., description="List of specific workflows causing inefficiencies")
+        impact: dict = Field(..., description="Quantified losses in time, cost, and opportunities")
+        client_goals: List[str] = Field(..., description="List of objectives the client aimed to achieve")
+    ```
+
+    CRITICAL RULES:
+    - Use only verified information
+    - Do not make up any information
+    - Clear evidence basis
+    - Practical examples
+    - All impacts must be quantifiable
+  expected_output: Challenge object for the CaseStudy model's challenge field. Nothing else.
+  agent: general_research_agent
+
+tech_stack_analysis_task:
+  description: >
+    OBJECTIVE:
+    Document and analyze the technical components used in the solution,
+    including programming languages, frameworks, and infrastructure.
+
+    Only populate the objects of the TechStack class.
+
+    METHODOLOGY:
+    1. Execute these queries sequentially:
+          "What programming languages were used in the solution?"
+          "What frameworks and libraries were utilized?"
+          "What infrastructure and cloud services were implemented?"
+          "What specific technical components were critical to success?"
+          "What integration points were required?"
+       
+    2. Evaluate responses to identify:
+        - Core technology choices
+        - Framework selection rationale
+        - Infrastructure requirements
+        - Integration requirements
+        - Technical dependencies
+
+    3. Establish connections between:
+      - Technology choices and business needs
+      - Framework capabilities and solution requirements
+      - Infrastructure decisions and scalability needs
+      - Technical components and implementation success
+
+    QUALITY CONTROL:
+    □ Technology Verification: Correct language versions and uses
+    □ Framework Validation: Appropriate framework selection
+    □ Infrastructure Accuracy: Correct cloud service documentation
+    □ Integration Confirmation: Verified connection points
+    □ Component Completeness: All technical elements documented
+
+    EVALUATION CRITERIA (1-10):
+    Technical Accuracy:
+    - 0: Incorrect or misidentified components
+    - 10: Fully verified and accurate technical details
+
+    Completeness:
+    - 0: Missing critical components
+    - 10: All technical elements documented
+
+    Implementation Relevance:
+    - 0: Unnecessary or unused components listed
+    - 10: All components directly contribute to solution
+
+    CONSTRAINTS:
+    - Use only verified data
+    - Mark uncertainties as None
+    - Each component must have clear purpose
+    - No invented information
+    - Minimum 2 items per list field
+
+    OUTPUT STRUCTURE:
+    Return TechStack object using Pydantic v2 format:
+    ```python
+    class TechStack(BaseModel):
+        languages: List[str] = Field(..., description="Programming languages used")
+        frameworks: List[str] = Field(..., description="Frameworks and libraries utilized")
+        infrastructure: List[str] = Field(..., description="Infrastructure and cloud services used")
+    ```
+
+    CRITICAL RULES:
+    - Use only verified information
+    - Do not make up any information
+    - Clear evidence basis
+    - Practical examples
+    - All components must be verified
+  expected_output: TechStack object for the Solution model's tech_stack field. Nothing else.
+  agent: general_research_agent
+
+solution_analysis_task:
+  description: >
+    OBJECTIVE:
+    Document and analyze the AI solution implemented, including agent details,
+    customizations, and technical components.
+
+    Only populate the objects of the Solution class.
+
+    METHODOLOGY:
+    1. Execute these queries sequentially:
+          "What AI agent was deployed?"
+          "What was the primary role and function of the agent?"
+          "What specific customizations were made for the client?"
+          "How was the solution tailored to the business needs?"
+          "What technical components were integrated?"
+       
+    2. Evaluate responses to identify:
+        - Agent capabilities and limitations
+        - Core functionalities implemented
+        - Custom features and adaptations
+        - Integration requirements
+        - Technical dependencies
+
+    3. Establish connections between:
+      - Agent capabilities and business needs
+      - Customizations and specific challenges
+      - Technical components and solution effectiveness
+      - Integration points and existing systems
+
+    QUALITY CONTROL:
+    □ Agent Verification: Correct agent type and capabilities
+    □ Role Clarity: Clear definition of agent functions
+    □ Customization Documentation: Specific adaptations listed
+    □ Technical Accuracy: Verified component integration
+    □ Implementation Validation: Confirmed solution deployment
+
+    EVALUATION CRITERIA (1-10):
+    Solution Accuracy:
+    - 0: Incorrect or misidentified solution components
+    - 10: Fully verified and accurate solution details
+
+    Customization Depth:
+    - 0: Generic implementation
+    - 10: Highly customized to client needs
+
+    Technical Integration:
+    - 0: Unclear technical implementation
+    - 10: Well-documented technical stack and integration
+
+    CONSTRAINTS:
+    - Use only verified data
+    - Mark uncertainties as None
+    - Each customization must have clear purpose
+    - No invented information
+    - Minimum 3 items per list field
+
+    OUTPUT STRUCTURE:
+    Return Solution object using Pydantic v2 format:
+    ```python
+    class Solution(BaseModel):
+        agent_name: str = Field(..., description="Name of the AI agent deployed")
+        agent_role: str = Field(..., description="Primary function of the AI agent")
+        customizations: List[str] = Field(..., description="List of customizations made for the client")
+        tech_stack: TechStack = Field(..., description="Technical components used in the solution")
+    ```
+
+    CRITICAL RULES:
+    - Use only verified information
+    - Do not make up any information
+    - Clear evidence basis
+    - Practical examples
+    - All components must be verified
+  expected_output: Solution object for the CaseStudy model's solution field. Nothing else.
+  agent: general_research_agent
+
+implementation_analysis_task:
+  description: >
+    OBJECTIVE:
+    Document and analyze the implementation process, including timeline,
+    phases, and challenges overcome during deployment.
+
+    Only populate the objects of the Implementation class.
+
+    METHODOLOGY:
+    1. Execute these queries sequentially:
+          "What was the total implementation duration?"
+          "What were the distinct implementation phases?"
+          "What challenges were encountered during implementation?"
+          "How were implementation challenges addressed?"
+          "What was the timeline for each phase?"
+       
+    2. Evaluate responses to identify:
+        - Implementation milestones
+        - Phase dependencies and progression
+        - Critical challenges and solutions
+        - Timeline accuracy
+        - Resource allocation
+
+    3. Establish connections between:
+      - Implementation phases and business impact
+      - Challenges and solution adaptations
+      - Timeline and resource requirements
+      - Phase completion and success metrics
+
+    QUALITY CONTROL:
+    □ Timeline Accuracy: Verified implementation duration
+    □ Phase Documentation: Clear phase descriptions and deliverables
+    □ Challenge Verification: Documented implementation obstacles
+    □ Solution Validation: Verified challenge resolutions
+    □ Progress Tracking: Accurate milestone completion
+
+    EVALUATION CRITERIA (1-10):
+    Timeline Precision:
+    - 0: Unclear or inaccurate timeline
+    - 10: Precise, well-documented timeline
+
+    Phase Detail:
+    - 0: Vague phase descriptions
+    - 10: Detailed phase documentation with clear deliverables
+
+    Challenge Resolution:
+    - 0: Undocumented challenge solutions
+    - 10: Well-documented challenges and resolutions
+
+    CONSTRAINTS:
+    - Use only verified data
+    - Mark uncertainties as None
+    - Each phase must have clear deliverables
+    - No invented information
+    - Minimum 3 items per list field
+
+    OUTPUT STRUCTURE:
+    Return Implementation object using Pydantic v2 format:
+    ```python
+    class Implementation(BaseModel):
+        timeline: timedelta = Field(..., description="Total implementation duration")
+        phases: List[dict] = Field(..., description="List of implementation phases with durations and descriptions")
+        challenges_overcome: List[str] = Field(..., description="Technical or organizational challenges that were addressed")
+    ```
+
+    CRITICAL RULES:
+    - Use only verified information
+    - Do not make up any information
+    - Clear evidence basis
+    - Practical examples
+    - All timelines must be verified
+  expected_output: Implementation object for the CaseStudy model's implementation field. Nothing else.
+  agent: general_research_agent
+
+results_analysis_task:
+  description: >
+    OBJECTIVE:
+    Document and analyze the quantifiable results and improvements achieved
+    through the implementation, including ROI and savings metrics.
+
+    Only populate the objects of the Results class.
+
+    METHODOLOGY:
+    1. Execute these queries sequentially:
+          "What specific performance metrics improved?"
+          "What was the calculated ROI of the implementation?"
+          "What time savings were achieved?"
+          "What cost savings were realized?"
+          "What additional benefits were measured?"
+       
+    2. Evaluate responses to identify:
+        - Key performance indicators
+        - Financial impact metrics
+        - Efficiency improvements
+        - Cost reduction areas
+        - Time optimization results
+
+    3. Establish connections between:
+      - Implementation costs and returns
+      - Time investments and efficiency gains
+      - Resource allocation and savings
+      - Performance improvements and business goals
+
+    QUALITY CONTROL:
+    □ Metric Accuracy: Verified performance measurements
+    □ ROI Calculation: Documented cost-benefit analysis
+    □ Savings Verification: Confirmed time and cost reductions
+    □ Impact Validation: Verified business improvements
+    □ Data Completeness: All key metrics documented
+
+    EVALUATION CRITERIA (1-10):
+    Metric Precision:
+    - 0: Unverified or estimated metrics
+    - 10: Precise, well-documented measurements
+
+    ROI Accuracy:
+    - 0: Incomplete or unclear ROI calculation
+    - 10: Detailed, verified ROI analysis
+
+    Savings Documentation:
+    - 0: Unsubstantiated savings claims
+    - 10: Well-documented, verified savings
+
+    CONSTRAINTS:
+    - Use only verified data
+    - Mark uncertainties as None
+    - Each metric must be quantifiable
+    - No invented information
+    - All financial impacts must be verified
+
+    OUTPUT STRUCTURE:
+    Return Results object using Pydantic v2 format:
+    ```python
+    class Results(BaseModel):
+        metrics: dict = Field(..., description="Key performance metrics and their improvements")
+        roi: dict = Field(..., description="Return on investment calculations")
+        time_savings: dict = Field(..., description="Time saved in various processes")
+        cost_savings: float = Field(..., description="Total cost savings achieved")
+    ```
+
+    CRITICAL RULES:
+    - Use only verified information
+    - Do not make up any information
+    - Clear evidence basis
+    - Practical examples
+    - All metrics must be verified
+  expected_output: Results object for the CaseStudy model's results field. Nothing else.
+  agent: general_research_agent
+
+report_task:
+  description: >
+    OBJECTIVE:
+    Create a comprehensive case study report that synthesizes all components into a cohesive narrative,
+    combining technical implementation details with market context and business impact.
+
+    METHODOLOGY:
+    1. Analyze all case study components:
+    - Executive Summary
+    - Challenge
+    - Solution
+    - Implementation
+    - Results
+    - Market Research
+
+    2. Develop Investment Thesis:
+    - Market opportunity size
+    - Growth potential
+    - Competitive advantage
+    - Risk assessment
+    - Return potential
+    - Scalability analysis
+
+    3. Create Implementation Thesis:
+    - Technical feasibility
+    - Resource requirements
+    - Timeline viability
+    - Success factors
+    - Risk mitigation
+    - Scaling strategy
+
+    4. Support with Market Data:
+    - Industry trends
+    - Market size
+    - Growth rates
+    - Competitive landscape
+    - Success metrics
+    - ROI analysis
+
+    5. Synthesize into CaseStudy object:
+    - Compelling title
+    - Clear executive summary
+    - Detailed challenge analysis
+    - Comprehensive solution description
+    - Implementation roadmap
+    - Quantifiable results
+
+    QUALITY CONTROL:
+    □ Narrative Coherence: Clear story flow
+    □ Data Integration: Market data supports claims
+    □ Technical Accuracy: Implementation details verified
+    □ Impact Validation: Results properly contextualized
+    □ Completeness: All components addressed
+
+    EVALUATION CRITERIA (1-10):
+    Narrative Quality:
+    - 0: Disconnected information
+    - 10: Compelling, coherent story
+
+    Market Integration:
+    - 0: Limited market context
+    - 10: Well-integrated market data
+
+    Technical Depth:
+    - 0: Surface-level details
+    - 10: Comprehensive technical analysis
+
+    CONSTRAINTS:
+    - Use only verified data
+    - Support all claims with evidence
+    - Maintain professional tone
+    - Focus on business impact
+    - Include all required components
+
+    OUTPUT STRUCTURE:
+    Return CaseStudy object using Pydantic v2 format:
+    ```python
+    class CaseStudy(BaseModel):
+        title: str
+        executive_summary: ExecutiveSummary
+        challenge: Challenge
+        solution: Solution
+        implementation: Implementation
+        results: Results
+    ```
+
+    CRITICAL RULES:
+    - All components must be evidence-based
+    - Market data must support claims
+    - Technical details must be accurate
+    - Results must be verifiable
+    - Narrative must be compelling
+
+  expected_output: >
+    A complete CaseStudy object containing all required components, supported by market data
+    and forming a coherent business transformation narrative.
+  agent: report_agent
