@@ -3,7 +3,7 @@ import sys
 import warnings
 from pydantic import BaseModel, Field
 from typing import List, Optional
-from .crew import AgenticRagExample
+from crew import AgenticRagExample
 
 warnings.filterwarnings("ignore", category=SyntaxWarning, module="pysbd")
 
@@ -69,7 +69,7 @@ def run():
     Run the crew.
     """
     inputs = {
-        "query": "Best use cases for custom voice agents"
+        "query": "roles where voice agents are most prevalent?"
     }
     AgenticRagExample().crew().kickoff(inputs=inputs)
 
@@ -111,3 +111,7 @@ def test():
 
     except Exception as e:
         raise Exception(f"An error occurred while replaying the crew: {e}")
+
+
+if __name__ == "__main__":
+    run()

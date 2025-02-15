@@ -113,9 +113,4 @@ class PineconeVectorSearchTool(BaseTool):
         raise NotImplementedError("Async version not implemented")
 
 
-if __name__ == "__main__":
-    # Example usage
-    tool = PineconeVectorSearchTool()
-    print("\nTesting search without filter...")
-    result = tool.run("roles where voice agents are most prevalent?")
-    print(result)
+

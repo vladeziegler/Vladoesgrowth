@@ -1,8 +1,8 @@
 import os
 from crewai import Agent, Crew, Process, Task
 from crewai.project import CrewBase, agent, crew, task, before_kickoff
-from .tools.weaviate_vector_search_tool import (
-    WeaviateVectorSearchTool,
+from tools.pineconeTool import (
+    PineconeVectorSearchTool,
 )
 from crewai_tools import EXASearchTool
 
@@ -68,13 +68,10 @@ class AgentObjectList(BaseModel):
 # you can use the @before_kickoff and @after_kickoff decorators
 # https://docs.crewai.com/concepts/crews#example-crew-class-with-decorators
 
-weaviate_vector_search_tool = WeaviateVectorSearchTool(
-    weaviate_cluster_url=os.environ.get("WEAVIATE_URL"),
-    weaviate_api_key=os.environ.get("WEAVIATE_API_KEY"),
-    collection_name="Agents_19",
-    headers={"X-OpenAI-Api-Key": os.environ.get("OPENAI_API_KEY")},
-    limit=10,
+pinecone_vector_search_tool = PineconeVectorSearchTool(
+    api_key=os.environ.get("PINECONE_API_KEY")
 )
+
 exa_search_tool = EXASearchTool(
     api_key=os.environ.get("EXA_API_KEY"),
 )
@@ -101,7 +98,7 @@ class AgenticRagExample:
         return Agent(
             config=self.agents_config["rag_agent"],
             verbose=True,
-            tools=[weaviate_vector_search_tool],
+            tools=[pinecone_vector_search_tool],
         )
 
     @agent
@@ -121,17 +118,27 @@ class AgenticRagExample:
     def rag_task(self) -> Task:
         return Task(
             config=self.tasks_config["rag_task"],
+            tools=[pinecone_vector_search_tool],
+            output_pydantic=AgentObjectList,
         )
 
     @task
     def expand_details_task(self) -> Task:
         return Task(
-            config=self.tasks_config["expand_details_task"], output_file="report.md"
+            config=self.tasks_config["expand_details_task"],
+            output_pydantic=AgentObjectList,
+            tools=[exa_search_tool],
+            output_file="report_MARKET_ANALYSIS.md",
+            context=[self.rag_task()],
         )
 
     @task
     def report_task(self) -> Task:
-        return Task(config=self.tasks_config["report_task"], output_file="report.md")
+        return Task(
+            config=self.tasks_config["report_task"],
+            output_file="report_INVESTMENT_THESES.md",
+            context=[self.expand_details_task()],
+        )
 
     @crew
     def crew(self) -> Crew:

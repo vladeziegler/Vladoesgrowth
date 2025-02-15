@@ -19,8 +19,7 @@ rag_task:
 
 expand_details_task:
   description: >
-    Review the context you got and expand each recommendation with additional market details.
-    For each recommendation, you must populate these optional fields:
+    Use the EXASearchTool tool to populate the following fields:
     - market_size 
     - market_category
     - market_growth
@@ -36,8 +35,10 @@ expand_details_task:
 
 report_task:
   description: >
-    For each AgentObject, create a detailed report where you come up with an investment thesis and entrepreneur thesis to justify building the AI agent. 
-    The report should look at the economics of the AI agent, and support the investment thesis with the entrepreneur thesis with the market data.    
+    For each AgentObject, create a detailed report where you come up with an investment thesis. 
+    The report should look at the economics of the AI agent, and support the investment thesis with the market data.    
+    The report should be in markdown format and include the following sections:
+    It should also contain all the information from the AgentObject.
   expected_output: >
     A detailed report for each AgentObject, including the investment thesis and entrepreneur thesis, supported by market data.
   agent: report_agent
