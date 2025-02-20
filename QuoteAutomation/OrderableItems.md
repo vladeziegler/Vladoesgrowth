@@ -1,0 +1,1 @@
+{"returned_items":[{"item_description":"Athletic Workout Shorts Gray Medium","upc_code":"843956178319","quantity_available":188,"unit_cost":22.75}]}

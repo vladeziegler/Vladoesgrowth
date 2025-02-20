@@ -5,7 +5,17 @@ import dotenv
 from enum import Enum
 from typing import Optional, Type, List, Union, Dict, Any
 
-dotenv.load_dotenv()
+# Get the absolute path to the project root (QuoteAutomation directory)
+PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '../../..'))
+ENV_PATH = os.path.join(PROJECT_ROOT, '.env')
+
+print("Loading environment from:", ENV_PATH)
+dotenv.load_dotenv(ENV_PATH)
+
+# Debug prints
+print("Environment variables after loading:")
+print(f"PINECONE_API_KEY: {'set' if os.getenv('PINECONE_API_KEY') else 'not set'}")
+print(f"PINECONE_HOST: {os.getenv('PINECONE_HOST')}")
 
 # DEBUG: Print out Python executable and sys.path for troubleshooting.
 print("Python executable:", sys.executable)
@@ -33,65 +43,122 @@ import json
 PINECONE_API_KEY = os.getenv("PINECONE_API_KEY")
 PINECONE_HOST = os.getenv("PINECONE_HOST")
 
-class FilterOperator(str, Enum):
-    """Supported Pinecone filter operators"""
-    EQ = "$eq"      # Equal to
-    NE = "$ne"      # Not equal to
-    GT = "$gt"      # Greater than
-    GTE = "$gte"    # Greater than or equal
-    LT = "$lt"      # Less than
-    LTE = "$lte"    # Less than or equal
-    IN = "$in"      # In array
-    NIN = "$nin"    # Not in array
-    EXISTS = "$exists"  # Field exists
-    AND = "$and"    # Logical AND
-    OR = "$or"      # Logical OR
+class FilterColumn(str, Enum):
+    """Available columns for filtering"""
+    UPC_CODE = "upc_code"
+    QUANTITY_AVAILABLE = "quantity_available"
+    UNIT_COST = "unit_cost"
 
-class FilterCondition(BaseModel):
-    """Schema for a single filter condition"""
-    field: str
-    operator: FilterOperator
-    value: Union[str, int, float, bool, List[Any]]
+class FilterSign(str, Enum):
+    """Available filter operations"""
+    EQUAL_TO = "eq"  # For UPC code
+    GREATER_THAN = "gt"  # For quantity
+    LESS_THAN = "lt"  # For unit cost
 
-class PineconeToolSchema(BaseModel):
-    """Input for PineconeTool."""
+class PineconeToolInput(BaseModel):
+    """Schema for tool input"""
     query: str = Field(
-        ...,
-        description="The query to search and retrieve relevant information."
+        description="The item description to search for"
     )
-    filters: Optional[List[FilterCondition]] = Field(
+    filter_column: Optional[FilterColumn] = Field(
         default=None,
-        description="List of filter conditions to apply"
+        description="Column to filter on: upc_code, quantity_available, or unit_cost"
     )
-    top_k: Optional[int] = Field(
-        default=5,
-        description="Number of results to return"
+    filter_sign: Optional[FilterSign] = Field(
+        default=None,
+        description="Filter operation to apply"
+    )
+    filter_value: Optional[Union[str, int, float]] = Field(
+        default=None,
+        description="Value to filter by (string for UPC, number for quantity/cost)"
+    )
+
+    @property
+    def get_filter(self) -> Optional[Dict]:
+        """Constructs the appropriate filter based on inputs"""
+        if not all([self.filter_column, self.filter_sign, self.filter_value]):
+            return None
+
+        # Validate filter combinations
+        if self.filter_column == FilterColumn.UPC_CODE:
+            if self.filter_sign != FilterSign.EQUAL_TO:
+                raise ValueError("UPC code must use EQUAL_TO comparison")
+            value = str(self.filter_value)  # Ensure UPC is string
+        elif self.filter_column == FilterColumn.QUANTITY_AVAILABLE:
+            if self.filter_sign != FilterSign.GREATER_THAN:
+                raise ValueError("Quantity must use GREATER_THAN comparison")
+            value = int(self.filter_value)
+        elif self.filter_column == FilterColumn.UNIT_COST:
+            if self.filter_sign != FilterSign.LESS_THAN:
+                raise ValueError("Unit cost must use LESS_THAN comparison")
+            value = float(self.filter_value)
+        
+        return {
+            self.filter_column.value: {
+                f"${self.filter_sign.value}": value
+            }
+        }
+
+class PineconeToolOutput(BaseModel):
+    """Schema for tool output"""
+    item_description: Optional[str] = Field(
+        default=None,
+        description="The description of the item"
+    )
+    upc_code: Optional[str] = Field(
+        default=None,
+        description="The UPC code of the item"
+    )
+    quantity_available: Optional[int] = Field(
+        default=None,
+        description="The available quantity of the item"
+    )
+    unit_cost: Optional[float] = Field(
+        default=None,
+        description="The unit cost of the item"
+    )
+    error: Optional[str] = Field(
+        default=None,
+        description="Error message if any"
     )
 
 class PineconeVectorSearchTool(BaseTool):
-    """Tool to query and filter results from a Pinecone database"""
-    
     name: str = "PineconeVectorSearchTool"
-    description: str = """
-    A tool to search the Pinecone database with advanced filtering capabilities.
-    """
-    
-    def _run(self, query: str, filters: Optional[Dict] = None, top_k: int = 5) -> str:
-        """
-        Execute the Pinecone search with filters.
-        Args:
-            query: The search query
-            filters: Optional metadata filters dictionary
-            top_k: Number of results to return
-        Returns:
-            Formatted string of results
-        """
+    description: str = """Search the Pinecone database for items"""
+    args_schema: Type[BaseModel] = PineconeToolInput
+    pc: Optional[Any] = None
+    index: Optional[Any] = None
+
+    def __init__(self):
+        super().__init__()
+        # Initialize Pinecone connection
+        print("Initializing PineconeVectorSearchTool...")
+        print(f"PINECONE_API_KEY: {'set' if PINECONE_API_KEY else 'not set'}")
+        print(f"PINECONE_HOST: {PINECONE_HOST}")
+        
+        # Create Pinecone client
+        self.pc = Pinecone(api_key=PINECONE_API_KEY)
+        self.index = self.pc.Index(host=PINECONE_HOST)
+        
+        print("PineconeVectorSearchTool initialized successfully")
+
+    def _run(self, query: str, filter_column: Optional[str] = None, 
+            filter_sign: Optional[str] = None, filter_value: Optional[Any] = None) -> str:
         try:
-            pc = Pinecone(api_key=PINECONE_API_KEY)
-            index = pc.Index(host=PINECONE_HOST)
+            print(f"\nPineconeVectorSearchTool executing search with:")
+            print(f"  Query: {query}")
+            print(f"  Filter: {filter_column}={filter_value} ({filter_sign})")
+            
+            # Create input model and validate
+            tool_input = PineconeToolInput(
+                query=query,
+                filter_column=filter_column,
+                filter_sign=filter_sign,
+                filter_value=filter_value
+            )
             
             # Convert query to embedding
-            query_embedding = pc.inference.embed(
+            query_embedding = self.pc.inference.embed(
                 model="multilingual-e5-large",
                 inputs=[query],
                 parameters={
@@ -104,149 +171,57 @@ class PineconeVectorSearchTool(BaseTool):
             query_params = {
                 "namespace": "clothing-data-2",
                 "vector": query_embedding.values,
-                "top_k": top_k,
+                "top_k": 1,
                 "include_metadata": True
             }
             
-            # Add filters if provided
-            if filters:
-                query_params["filter"] = filters
+            # Add filter if provided
+            filter_dict = tool_input.get_filter
+            if filter_dict:
+                query_params["filter"] = filter_dict
+            
+            print(f"Executing Pinecone query with params: {query_params}")
             
             # Execute search
-            results = index.query(**query_params)
+            results = self.index.query(**query_params)
+            print(f"Search results: {results}")
             
-            # Format and print results
-            output = f"\nSearch Query: '{query}'\n"
-            if filters:
-                output += f"Filters applied: {filters}\n"
-            output += "Top Results:\n"
+            if not results.matches:
+                return PineconeToolOutput(
+                    error="No matches found"
+                ).json()
             
-            for idx, match in enumerate(results.matches, 1):
-                metadata = match.metadata
-                output += f"\n{idx}. Score: {match.score:.3f}\n"
-                output += f"Item Code: {metadata.get('item_code', 'N/A')}\n"
-                output += f"Description: {metadata.get('item_description', 'N/A')}\n"
-                output += f"Category: {metadata.get('category', 'N/A')}\n"
-                output += f"Quantities - On-hand: {metadata.get('quantity_on_hand', 'N/A')}, "
-                output += f"Available: {metadata.get('quantity_available', 'N/A')}\n"
-                output += f"Total Inventory Value: {metadata.get('total_inventory_value', 'N/A')}\n"
+            # Get the best match
+            match = results.matches[0]
+            metadata = match.metadata
             
-            return output
+            # Format response using output schema
+            response = PineconeToolOutput(
+                item_description=metadata.get("item_description"),
+                upc_code=metadata.get("upc_code"),
+                quantity_available=metadata.get("quantity_available"),
+                unit_cost=metadata.get("unit_cost"),
+                error=None
+            )
+            
+            return response.json()
             
         except Exception as e:
-            return f"Error during search: {str(e)}"
-
-    @staticmethod
-    def create_filter(**kwargs):
-        """
-        Helper function to create properly structured filters
-        Examples:
-            create_filter(
-                category=(FilterOperator.EQ, "Apparel/T-Shirts"),
-                quantity_available=(FilterOperator.LT, 100)
-            )
-        """
-        filter_dict = {}
-        for field, (operator, value) in kwargs.items():
-            if isinstance(operator, FilterOperator):
-                filter_dict[field] = {operator.value: value}
-        return filter_dict
-
-    @staticmethod
-    def create_range_filter(field, min_value=None, max_value=None):
-        """
-        Create a range filter for numeric fields
-        Args:
-            field: The field to filter on
-            min_value: Minimum value (inclusive)
-            max_value: Maximum value (inclusive)
-        """
-        conditions = {}
-        if min_value is not None:
-            conditions[FilterOperator.GTE.value] = min_value
-        if max_value is not None:
-            conditions[FilterOperator.LTE.value] = max_value
-        return {field: conditions}
+            print(f"Error in PineconeVectorSearchTool: {str(e)}")
+            return PineconeToolOutput(
+                error=str(e)
+            ).json()
 
 def main():
     tool = PineconeVectorSearchTool()
-    
-    # Example queries with filters
-    example_queries = [
-        (
-            "Show all Apparel/T-Shirts inventory details",
-            tool.create_filter(category=(FilterOperator.EQ, "Apparel/T-Shirts"))
-        ),
-        (
-            "Which items are low in available stock?",
-            tool.create_filter(quantity_available=(FilterOperator.LT, 100))
-        ),
-        (
-            "List items with high inventory value",
-            tool.create_filter(total_inventory_value=(FilterOperator.GT, 5000))
-        ),
-        (
-            "Show items with quantity between 50 and 150",
-            tool.create_range_filter("quantity_on_hand", 50, 150)
-        )
-    ]
-    
-    # Interactive query interface
-    print("Choose a query or enter your own:")
-    for idx, (query, _) in enumerate(example_queries, 1):
-        print(f"{idx}. {query}")
-    print("0. Enter your own query")
-    
-    choice = input("\nEnter your choice (0-4): ")
-    
-    if choice == "0":
-        query_text = input("\nEnter your query: ")
-        custom_filter = input("Do you want to add a metadata filter? (y/n): ").lower().startswith('y')
-        if custom_filter:
-            key = input("Enter metadata field key (e.g., category, quantity_on_hand): ")
-            print("\nAvailable operators:")
-            for op in FilterOperator:
-                print(f"  {op.name}: {op.value}")
-            op_name = input("Enter operator name: ").upper()
-            value = input("Enter value: ")
-            try:
-                value = float(value)
-            except ValueError:
-                pass
-            filters = tool.create_filter(**{key: (FilterOperator[op_name], value)})
-        else:
-            filters = None
-    else:
-        try:
-            query_text, filters = example_queries[int(choice)-1]
-        except (ValueError, IndexError):
-            print("Invalid choice. Using default query.")
-            query_text, filters = example_queries[0]
-    
-    # Perform the search
-    result = tool.run(query=query_text, filters=filters)
+    # Add debug prints
+    result = tool._run(
+        query="What are your athletic clothes?", 
+        filter_column=None, 
+        filter_sign=None, 
+        filter_value=None
+    )
     print(result)
-    
-    # Allow multiple queries
-    while input("\nWould you like to try another query? (y/n): ").lower().startswith('y'):
-        query_text = input("\nEnter your query: ")
-        custom_filter = input("Do you want to add a metadata filter? (y/n): ").lower().startswith('y')
-        if custom_filter:
-            key = input("Enter metadata field key (e.g., category, quantity_on_hand): ")
-            print("\nAvailable operators:")
-            for op in FilterOperator:
-                print(f"  {op.name}: {op.value}")
-            op_name = input("Enter operator name: ").upper()
-            value = input("Enter value: ")
-            try:
-                value = float(value)
-            except ValueError:
-                pass
-            filters = tool.create_filter(**{key: (FilterOperator[op_name], value)})
-        else:
-            filters = None
-        result = tool.run(query=query_text, filters=filters)
-        print(result)
-
 if __name__ == "__main__":
     main()
+
