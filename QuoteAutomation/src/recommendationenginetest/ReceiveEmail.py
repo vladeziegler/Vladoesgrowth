@@ -33,6 +33,9 @@ openai_llm = LLM(
 #     model="groq/llama-3.3-70b-versatile",
 #     temperature=0.2
 # )
+from tools.multiplicationTool import multiplication_tool
+from tools.calculationTool import CalculationTool
+calculation_tool = CalculationTool()
 
 # COMPOSIO_API_KEY = os.getenv("COMPOSIO_API_KEY")
 # calendar_tools = composio_toolset.get_tools(actions=[Action.GOOGLECALENDAR_FIND_FREE_SLOTS, Action.GOOGLECALENDAR_CREATE_EVENT, Action.GMAIL_CREATE_EMAIL_DRAFT])
@@ -74,11 +77,20 @@ class ListOfItems(BaseModel):
 class ReturnedItem(BaseModel):
     item_description: Optional[str] = Field(description="The description of the item", default=None)
     upc_code: Optional[str] = Field(description="The upc code of the item", default=None)
+    quantity: Optional[int] = Field(description="The quantity of the item", default=None)
     quantity_available: Optional[int] = Field(description="The quantity of the item available", default=None)
     unit_cost: Optional[float] = Field(description="The unit cost of the item", default=None)
+    value: Optional[float] = Field(description="The product of quantity and unit cost of the item", default=None)
 
 class OrderableItems(BaseModel):
     returned_items: Optional[List[ReturnedItem]] = Field(description="The list of items", default_factory=list)
+
+class Quote(BaseModel):
+    orderable_items: OrderableItems
+    quote: Optional[float] = Field(description="The sum of the values of the items from the OrderableItems object", default=None)
+
+class EmailDraft(BaseModel):
+    email_draft: Optional[str] = Field(description="The email draft", default=None)
 
 # Create a CrewAI agent
 email_processor = Agent(
@@ -101,6 +113,35 @@ database_checker = Agent(
     2. Processing the tool's output into a ReturnedItem object to form the OrderableItems object""",
     verbose=True,
     tools=[database_tool],
+    llm=ChatOpenAI(model="gpt-4o")
+)
+
+quote_generator = Agent(
+    role="Quote Generator Agent",
+    goal="""You are an AI assistant specialized in generating a quote for the OrderableItems object. You are an expert at multiplying the quantity and the unit cost of each item to get the value of the item and then summing up the values to get the total quote.""",
+    backstory="""You are an expert at:
+    1. Multiplying the quantity and the unit cost of each item to get the value of the item
+    2. Summing up the values to get the total quote""",
+    verbose=True,
+    tools=[multiplication_tool],
+    llm=ChatOpenAI(model="gpt-4o")
+)
+
+email_draft_preparator = Agent(
+    role="Email Draft Preparator Agent",
+    goal="""You are a sales agent specialized in handling inbound requests from customers who want to purchase products from your company. You need to generate draft emails to respond to the customer's request about the products they want to purchase. This means that you return info about the items available, their prices, etc. and provide a quote for the customer. """,
+    backstory="""You are an expert at using structured data about what you have in your inventory to generate convincing emails. You explain the products available, their prices, etc. and provide a quote for the customer. You're using the GMAIL_CREATE_EMAIL_DRAFT tool to create an email draft.""",
+    verbose=True,
+    tools=[calculation_tool],
+    llm=ChatOpenAI(model="gpt-4o")
+)
+
+email_draft_generator = Agent(
+    role="Email Draft Generator Agent",
+    goal="""You take the email draft from the previous task and use the GMAIL_CREATE_EMAIL_DRAFT tool to create an email draft.""",
+    backstory="""You are excellent at following orders and not modifying information along the way. You're using the GMAIL_CREATE_EMAIL_DRAFT tool to create an email draft.""",
+    verbose=True,
+    tools=tools,
     llm=ChatOpenAI(model="gpt-4o")
 )
 
@@ -131,11 +172,16 @@ check_database_task = Task(
     filter_sign="the desired sign of the filter"
     filter_value="value to apply to the filter"
 
-    Here is the list of filter you can apply to the metadata:
-    - "upc_code"
+    IMPORTANT: If you're looking for regular items, you need to use the "upc_code" filter as a minimum requirement with the "eq" sign.
+
+    Then depending on your needs, here is the list of filter you can apply to the metadata:
+    - "quantity_available"
+    - "unit_cost"
 
     Here are the possible filter signs:
     - "eq"
+    - "gt"
+    - "lt"
 
     For new items (from new_items list):
     query="description of the new item"
@@ -146,6 +192,7 @@ check_database_task = Task(
     Here is the list of filter you can apply to the metadata:
     - "unit_cost"
     - "quantity_available"
+    - "upc_code"
 
     Here are the possible filter signs:
     - "eq"
@@ -171,10 +218,70 @@ check_database_task = Task(
     expected_output="An OrderableItems object containing all found items"
 )
 
+generate_quote_task = Task(
+    description="Multiply the quantity and the unit cost of each item to get the value of the item and then summing up the values to get the total quote.",
+    agent=quote_generator,
+    output_pydantic=Quote,
+    output_file="Quote.md",
+    tools=[multiplication_tool],
+    expected_output="A Quote object"
+)
+
+prepare_email_draft_task = Task(
+    description="""Generate an email draft with the OrderableItems object and the total quote.
+    The email draft should go as follows:
+    Subject: "Quote for your order"
+    Body: You will be using the GMAIL_CREATE_EMAIL_DRAFT tool to create the email draft.
+    Based on the information from the Quote object, which contains a list of ReturnedItems, you will provide context about the items available, their prices, etc. and provide a quote for the customer.
+    Example:
+    Body: "We have the following items available: ReturnedItems object"
+    "Fleece Hoodie Gray Large (UPC: 843956178265)"
+    "Quantity: 10"
+    "Unit Cost: $10.00"
+    "Value: $100.00"
+    "Total Quote: $100.00" (if this is the only product)
+    Here are imporant rules to follow:
+    You should compare the quantity of the item with the quantity available. If the quantity is greater than the quantity available, you will inform the customer that we don't have enough items available. Use the fields quantity_available and quantity to compare the quantity. Use the calculation_tool if necessary.
+    Do not mix up the quantity and the quantity_available. Make sure to understand the task to pick out the correct fields.
+    You should compare the unit_cost of the item with the unit_cost of the item in the database. If the unit_cost is greater than the unit_cost of the item in the database, you will inform the customer that we don't have the item within their budget.
+    If the item is not available, you will inform the customer that we don't have the item in our inventory.
+    Every time you return an item, you will return its item_description, upc_code, quantity, unit_cost, and value (if quantity is provided).
+    Finally, you will return the total quote for the customer in US dollars.
+    You need to thoroughly check the information from the Quote object and the ReturnedItems object to make sure you are providing the correct information to the customer.
+    {sender_mail} is the email of the sender of the email.
+    Check the {thread_id} to send the email to the correct thread.
+    Use the {message} to draft an email that is consistent with what the sender of the email is saying.
+    """,
+    agent=email_draft_preparator,
+    output_file="EmailDraft.md",
+    context=[process_email_task, check_database_task, generate_quote_task],
+    tools=[calculation_tool],
+    output_pydantic=EmailDraft,
+    expected_output="The email draft"
+)
+
+generate_email_draft_task = Task(
+    description="Take the email draft from the previous task, or the EmailDraft object, and use the GMAIL_CREATE_EMAIL_DRAFT tool to create an email draft.",
+    agent=email_draft_generator,
+    output_file="EmailDraft.md",
+    tools=tools,
+    context=[prepare_email_draft_task],
+    expected_output="The email draft created by the GMAIL_CREATE_EMAIL_DRAFT tool"
+)
+
+
+class ReturnedItem(BaseModel):
+    item_description: Optional[str] = Field(description="The description of the item", default=None)
+    upc_code: Optional[str] = Field(description="The upc code of the item", default=None)
+    quantity: Optional[int] = Field(description="The quantity of the item", default=None)
+    quantity_available: Optional[int] = Field(description="The quantity of the item available", default=None)
+    unit_cost: Optional[float] = Field(description="The unit cost of the item", default=None)
+    value: Optional[float] = Field(description="The product of quantity and unit cost of the item", default=None)
+
 # Create a crew with the agent
 scheduler_crew = Crew(
-    agents=[email_processor, database_checker],
-    tasks=[process_email_task, check_database_task],
+    agents=[email_processor, database_checker, quote_generator, email_draft_preparator, email_draft_generator],
+    tasks=[process_email_task, check_database_task, generate_quote_task, prepare_email_draft_task, generate_email_draft_task],
     process=Process.sequential,
     verbose=True
 )

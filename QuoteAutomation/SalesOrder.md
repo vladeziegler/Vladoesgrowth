@@ -1,1 +1,1 @@
-{"items":[],"new_items":[{"query":"athletic clothes","quantity":null}]}
+{"items":[{"description":"Salomé Vergne gave kudos for Afternoon Run","upc_code":"13680144929","quantity":1},{"description":"Salomé Vergne gave kudos for Afternoon Run","upc_code":"13680144929","quantity":1},{"description":"Salomé Vergne gave kudos for Afternoon Run","upc_code":"13680144929","quantity":1}],"new_items":[]}
