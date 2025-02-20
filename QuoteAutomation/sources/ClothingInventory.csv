@@ -1,0 +1,11 @@
+item_code,item_description,upc_code,manufacturer_part_number,category,quantity_on_hand,quantity_allocated,quantity_available,reorder_point,minimum_stock_level,maximum_stock_level,safety_stock,unit_cost,average_cost,last_purchase_price,standard_cost,currency_code,total_inventory_value,primary_vendor_id,lead_time_days,last_order_date,last_receipt_date,preferred_order_quantity
+SK-TS-BL-M,Premium Cotton T-Shirt Black Medium,843956178234,TC-BLK-M-001,Apparel/T-Shirts,245,35,210,100,50,500,75,12.5,11.75,12.25,11,USD,2887.5,COTTON-SUP-001,14,2025-01-15,2025-01-29,200
+SK-HD-GY-L,Fleece Hoodie Gray Large,843956178241,HD-GRY-L-002,Apparel/Hoodies,180,25,155,75,40,300,50,28.75,27.5,28,26.5,USD,4950,FLEECE-SUP-002,21,2025-01-20,2025-02-10,150
+SK-JN-BL-32,Premium Denim Jeans Blue 32x32,843956178258,JN-BLU-32-003,Apparel/Jeans,156,42,114,60,30,250,40,45,43.75,44.5,42.5,USD,6825,DENIM-SUP-003,28,2025-01-25,2025-02-15,100
+SK-SK-BK-S,Athletic Socks Black Small 3-Pack,843956178265,SK-BLK-S-004,Apparel/Socks,520,80,440,200,100,800,150,8.25,7.75,8,7.5,USD,4040,SOCK-SUP-001,10,2025-02-01,2025-02-11,400
+SK-PT-KH-M,Chino Pants Khaki Medium,843956178272,PT-KHK-M-005,Apparel/Pants,134,22,112,50,25,200,35,35.5,34.25,35,33.75,USD,4557,PANT-SUP-002,18,2025-01-28,2025-02-15,100
+SK-TS-WH-L,Basic V-Neck T-Shirt White Large,843956178289,TV-WHT-L-006,Apparel/T-Shirts,312,45,267,120,60,600,90,9.75,9.25,9.5,9,USD,2925,COTTON-SUP-001,14,2025-02-05,2025-02-19,250
+SK-SW-NV-XL,Crewneck Sweatshirt Navy XLarge,843956178296,SW-NVY-XL-007,Apparel/Sweatshirts,167,28,139,70,35,280,45,32.5,31.25,32,30.75,USD,5200,FLEECE-SUP-002,21,2025-01-22,2025-02-12,125
+SK-JN-BK-30,Slim Fit Jeans Black 30x32,843956178302,JN-BLK-30-008,Apparel/Jeans,143,38,105,55,28,225,38,47.5,46.25,47,45.75,USD,6650,DENIM-SUP-003,28,2025-01-18,2025-02-15,100
+SK-DR-GY-M,Athletic Workout Shorts Gray Medium,843956178319,DR-GRY-M-009,Apparel/Shorts,228,40,188,90,45,400,65,22.75,21.5,22.25,21,USD,4902,SPORT-SUP-004,16,2025-02-02,2025-02-18,175
+SK-PL-ST-S,Performance Polo Shirt Steel Small,843956178326,PL-STL-S-010,Apparel/Polos,198,32,166,80,40,350,60,24.5,23.25,24,22.75,USD,4653,POLO-SUP-005,17,2025-01-30,2025-02-16,150

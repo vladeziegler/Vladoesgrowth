@@ -1,0 +1,67 @@
+Metadata-Version: 2.1
+Name: pyvis
+Version: 0.3.2
+Summary: A Python network graph visualization library
+Home-page: https://github.com/WestHealth/pyvis
+Author: Jose Unpingco
+Author-email: pypi@westhealth.org
+License: BSD
+Platform: UNKNOWN
+Requires-Python: >3.6
+Description-Content-Type: text/markdown
+Requires-Dist: ipython (>=5.3.0)
+Requires-Dist: jinja2 (>=2.9.6)
+Requires-Dist: jsonpickle (>=1.4.1)
+Requires-Dist: networkx (>=1.11)
+
+## Pyvis - a Python library for visualizing networks
+
+![](pyvis/source/tut.gif?raw=true)
+
+## Description
+Pyvis is built around [visjs](http://visjs.org/), a JavaScript visualization library.
+
+## Documentation
+Pyvis' full documentation can be found at http://pyvis.readthedocs.io/en/latest/
+## Installation
+You can install pyvis through pip:
+
+```bash
+pip install pyvis
+```
+Or if you have an archive of the project simply run the following from the top level directory:
+
+```bash
+python setup.py install
+```
+
+## Dependencies
+[networkx](https://networkx.github.io/)
+
+[jinja2](http://jinja.pocoo.org/)
+
+[ipython](https://ipython.org/ipython-doc/2/install/install.html)
+
+[jsonpickle](https://jsonpickle.github.io/)
+
+### Test Dependencies
+[selenium](https://www.selenium.dev/documentation/webdriver/)
+
+[numpy](https://numpy.org/install/)
+## Quick Start
+The most basic use case of a pyvis instance is to create a Network object and invoke methods:
+
+```python
+from pyvis.network import Network
+
+g = Network()
+g.add_node(0)
+g.add_node(1)
+g.add_edge(0, 1)
+g.show("basic.html")
+```
+
+## Interactive Notebook playground with examples
+[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/WestHealth/pyvis/master?filepath=notebooks%2Fexample.ipynb)
+
+
