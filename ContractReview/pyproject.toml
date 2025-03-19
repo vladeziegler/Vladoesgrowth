@@ -1,0 +1,35 @@
+[project]
+name = "contract-review"
+version = "0.1.0"
+description = "Tools for contract review and insurance claim analysis"
+authors = [
+    {name = "Vladimir Deziegler", email = "your.email@example.com"}
+]
+readme = "README.md"
+requires-python = ">=3.8"
+dependencies = [
+    "crewai",
+    "llama-index",
+    "llama-index-llms-openai",
+    "llama-index-embeddings-openai",
+    "openai",
+    "pydantic>=2.0.0",
+]
+
+[build-system]
+requires = ["setuptools>=42", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project.optional-dependencies]
+dev = [
+    "pytest",
+    "black",
+    "isort",
+]
+
+[tool.setuptools]
+packages = ["contract_review"]
+package-dir = {"contract_review" = "ContractReview/src"}
+
+[tool.setuptools.package-data]
+contract_review = ["**/*.py"]

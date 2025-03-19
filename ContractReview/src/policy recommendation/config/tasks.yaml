@@ -1,0 +1,44 @@
+rag_task:
+  description: >
+    Generate a list of recommendations based on the users query: {query}. Only use the results found.
+    Each recommendation must include all required fields:
+    - company_activity
+    - task 
+    - location
+    - role 
+    - hours_saved   
+    - money_saved 
+    
+    If you believe its appropriate, use the filter_by and filter_value to filter the results. Limit the results to 2.
+    If you do not use the filter_by and filter_value, do not add filter_by and filter_value to the argument schema within the tool.
+    You can filter by the following properties: company_activity
+  expected_output: >
+    A structured list of recommendations based on the users query: {query}, with each recommendation containing all required fields:
+    company_activity, task, location, role, hours_saved, and money_saved.
+  agent: rag_agent
+
+expand_details_task:
+  description: >
+    Use the EXASearchTool tool to populate the following fields:
+    - market_size 
+    - market_category
+    - market_growth
+    - market_challenges
+    - market_notes
+    
+    Make sure the report is detailed and contains any and all relevant information.
+    Use the ExaSearch tool to search for relevant information about each market and industry mentioned in the recommendations.
+  expected_output: >
+    A list of AgentObject, including all original fields plus the expanded market details:
+    market_size, market_category, market_growth, market_challenges, and market_notes.
+  agent: expand_details_agent
+
+report_task:
+  description: >
+    For each AgentObject, create a detailed report where you come up with an investment thesis. 
+    The report should look at the economics of the AI agent, and support the investment thesis with the market data.    
+    The report should be in markdown format and include the following sections:
+    It should also contain all the information from the AgentObject.
+  expected_output: >
+    A detailed report for each AgentObject, including the investment thesis and entrepreneur thesis, supported by market data.
+  agent: report_agent
