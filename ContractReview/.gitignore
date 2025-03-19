@@ -25,3 +25,15 @@ build/
 # IDE
 .vscode/
 .idea/ 
+# Virtual Environment
+**/myenv/
+**/.venv/
+**/venv/
+**/env/
+
+# Python package directories
+**/site-packages/
+**/__pycache__/
+*.py[cod]
+*.class
+*.so
