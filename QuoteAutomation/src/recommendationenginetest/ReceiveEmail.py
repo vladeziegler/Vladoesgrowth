@@ -33,8 +33,23 @@ openai_llm = LLM(
 #     model="groq/llama-3.3-70b-versatile",
 #     temperature=0.2
 # )
+# Fix imports for tools
+import os
+import sys
+
+# Add the parent directory to Python path to make imports work properly
+current_dir = os.path.dirname(os.path.abspath(__file__))
+project_root = os.path.dirname(os.path.dirname(current_dir))
+if project_root not in sys.path:
+    sys.path.insert(0, project_root)
+
+# Now import from the correct location
 from tools.multiplicationTool import multiplication_tool
 from tools.calculationTool import CalculationTool
+from tools.pineconeTool import PineconeVectorSearchTool
+
+# from tools.multiplicationTool import multiplication_tool
+# from tools.calculationTool import CalculationTool
 calculation_tool = CalculationTool()
 
 # COMPOSIO_API_KEY = os.getenv("COMPOSIO_API_KEY")
@@ -44,9 +59,9 @@ composio_toolset = ComposioToolSet(api_key=COMPOSIO_API_KEY)
 date_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 timezone = datetime.now().astimezone().tzinfo
 tools = composio_toolset.get_tools(actions=[
-    Action.GOOGLESHEETS_LOOKUP_SPREADSHEET_ROW,
-    Action.GOOGLECALENDAR_FIND_FREE_SLOTS, 
-    Action.GOOGLECALENDAR_CREATE_EVENT, 
+    # Action.GOOGLESHEETS_LOOKUP_SPREADSHEET_ROW,
+    # Action.GOOGLECALENDAR_FIND_FREE_SLOTS, 
+    # Action.GOOGLECALENDAR_CREATE_EVENT, 
     Action.GMAIL_CREATE_EMAIL_DRAFT
 ])
 import sys
@@ -318,11 +333,16 @@ def callback_function(event: TriggerEventData) -> None:
     except Exception as e:
         print(f"Error in crew execution: {str(e)}")
 
-print("Listener started!")
-print("Environment Variables at Start:")
-print("PINECONE_HOST:", os.getenv("PINECONE_HOST"))
-print("PINECONE_API_KEY:", "set" if os.getenv("PINECONE_API_KEY") else "not set")
-print("Waiting for email")
-listener.wait_forever()
+def main():
+    print("Listener started!")
+    print("Environment Variables at Start:")
+    print("PINECONE_HOST:", os.getenv("PINECONE_HOST"))
+    print("PINECONE_API_KEY:", "set" if os.getenv("PINECONE_API_KEY") else "not set")
+    print("Waiting for email")
+    listener.wait_forever()
+
+# Replace the direct execution code with this
+if __name__ == "__main__":
+    main()
         # Add code to label the email as important using Composio's Gmail tools
 

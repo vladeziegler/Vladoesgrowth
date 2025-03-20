@@ -171,7 +171,7 @@ class PineconeVectorSearchTool(BaseTool):
             query_params = {
                 "namespace": "clothing-data-2",
                 "vector": query_embedding.values,
-                "top_k": 1,
+                "top_k": 2,
                 "include_metadata": True
             }
             
@@ -212,16 +212,16 @@ class PineconeVectorSearchTool(BaseTool):
                 error=str(e)
             ).json()
 
-def main():
-    tool = PineconeVectorSearchTool()
-    # Add debug prints
-    result = tool._run(
-        query="What are your athletic clothes?", 
-        filter_column=None, 
-        filter_sign=None, 
-        filter_value=None
-    )
-    print(result)
-if __name__ == "__main__":
-    main()
+# def main():
+#     tool = PineconeVectorSearchTool()
+#     # Add debug prints
+#     result = tool._run(
+#         query="What are your athletic clothes?", 
+#         filter_column=FilterColumn.QUANTITY_AVAILABLE, 
+#         filter_sign=FilterSign.GREATER_THAN, 
+#         filter_value=100
+#     )
+#     print(result)
+# if __name__ == "__main__":
+#     main()
 

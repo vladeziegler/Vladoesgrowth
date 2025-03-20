@@ -1,1 +1,1 @@
-{"returned_items":[]}
+{"returned_items":[{"item_description":"Crewneck Sweatshirt Navy XLarge","upc_code":"843956178296","quantity":null,"quantity_available":139,"unit_cost":32.5,"value":null},{"item_description":"Athletic Workout Shorts Gray Medium","upc_code":"843956178319","quantity":null,"quantity_available":188,"unit_cost":22.75,"value":null},{"item_description":"Slim Fit Jeans Black 30x32","upc_code":"843956178302","quantity":null,"quantity_available":105,"unit_cost":47.5,"value":null}]}
