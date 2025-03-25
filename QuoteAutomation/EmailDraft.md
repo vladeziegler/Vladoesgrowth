@@ -1,38 +1,31 @@
 The email draft has been successfully created with the following details:
 
 Subject: Quote for your order
-
 Body:
-Hi!
+Hi Vladimir,
 
-We're thrilled to welcome you to the *Swiftra Beta* program!
+Thank you for your inquiry regarding your order. We are pleased to inform you that the following items are available:
 
-Swiftra is designed specifically for consultants and researchers to dramatically speed up research workflows, starting with research interview analysis and insights generation.
+1. Fleece Hoodie Gray Large (UPC: 843956178241)
+   - Quantity: 2
+   - Unit Cost: $28.75
+   - Value: $57.50
 
-*Getting Started:*
+2. Crewneck Sweatshirt Navy XLarge (UPC: 843956178296)
+   - Quantity: 4
+   - Unit Cost: $32.50
+   - Value: $130.00
 
-Head to https://tryswiftra.com/signup
+Total Quote: $187.50
 
-Sign up using the email you provided for beta sign up (the email address that got this message)
+Additionally, our collection of athletic clothes includes the following item:
 
-Upload your research documents and instantly generate actionable insights, add your own nuanced highlights, and generate report drafts.
+- Athletic Socks Black Small 3-Pack (UPC: 843956178265)
+   - Unit Cost: $8.25
 
-I'd love to connect and hear your feedback and if we could do anything to make the tool more useful for your workflows - how does next week Wednesday or Thursday afternoon work for you?
+If you have any further questions or wish to place an order, please don't hesitate to contact us.
 
--Miro @ Swiftra
+Thank you,
 
-We have the following items available:
-
-1. Crewneck Sweatshirt Navy XLarge (UPC: 843956178296)
-   Unit Cost: $32.50
-
-2. Athletic Workout Shorts Gray Medium (UPC: 843956178319)
-   Unit Cost: $22.75
-
-3. Slim Fit Jeans Black 30x32 (UPC: 843956178302)
-   Unit Cost: $47.50
-
-Please let us know if you would like to proceed with any specific quantities or if you have any other questions.
-
-Best regards,
-Miroslav Lysyuk
+Vladimir de Ziegler
+Whatsapp: +31 (6) 8738 1260

@@ -13,7 +13,7 @@ for p in sys.path:
 
 # Attempt the exact same import as in your working query.py
 try:
-    from pinecone.grpc import PineconeGRPC as Pinecone
+    from pinecone import Pinecone
 except ModuleNotFoundError as err:
     sys.stderr.write("Error importing pinecone.grpc:\n")
     sys.stderr.write(str(err) + "\n")
@@ -111,6 +111,5 @@ class PineconeVectorSearchTool(BaseTool):
     def _arun(self, query: str, filter_by: Optional[str] = None):
         """Async version of _run (not implemented)"""
         raise NotImplementedError("Async version not implemented")
-
 
 

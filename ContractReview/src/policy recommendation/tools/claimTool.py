@@ -303,8 +303,6 @@ if __name__ == "__main__":
     
     # Test queries
     test_queries = [
-        "What is the claim number?",
-        "What is the policy number?",
         "What damages were reported?",
         "What was the date of loss?"
     ]
