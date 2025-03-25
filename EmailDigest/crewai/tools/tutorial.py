@@ -19,10 +19,24 @@ from composio_crewai import ComposioToolSet, Action, App
 from crewai import Agent, Task, Crew
 from langchain_openai import ChatOpenAI
 from typing import Optional, List
+from dotenv import load_dotenv
 
+load_dotenv()
+# WEAVIATE_URL="https://wvi8wqqrcupiy1tcitytq.c0.europe-west3.gcp.weaviate.cloud"
+# WEAVIATE_API_KEY="MxOHuivkiw0BKeaEIAopprviWWqUVWgL2fkl"
+# OPENAI_API_KEY="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"
+# EXA_API_KEY="dd8396b6-7644-4e92-8b24-1a937101687f"
+# PINECONE_API_KEY="pcsk_4x9hKF_JZA8EYiwd1krCsMb9UnLTGSUSdE1XSNcwfBsC9LcBvxuMjV9ErxJHcb9dVWQTy1"
+# PINECONE_HOST="https://clothing-data-2-250u2qg.svc.aped-4627-b74a.pinecone.io"
+# COMPOSIO_API_KEY="vl3aa4zgipffn4ykpmzqva"
+# GROQ_API_KEY="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"
+# COMPOSIO_API_KEY = os.getenv("COMPOSIO_API_KEY")
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
-COMPOSIO_API_KEY = os.getenv("COMPOSIO_API_KEY")
-# calendar_tools = composio_toolset.get_tools(actions=[Action.GOOGLECALENDAR_FIND_FREE_SLOTS, Action.GOOGLECALENDAR_CREATE_EVENT, Action.GMAIL_CREATE_EMAIL_DRAFT])
+# COMPOSIO_API_KEY = os.getenv("COMPOSIO_API_KEY")
+COMPOSIO_API_KEY = "vl3aa4zgipffn4ykpmzqva"
+composio_toolset = ComposioToolSet(api_key=COMPOSIO_API_KEY)
+
+calendar_tools = composio_toolset.get_tools(actions=[Action.GOOGLECALENDAR_FIND_FREE_SLOTS, Action.GOOGLECALENDAR_CREATE_EVENT, Action.GMAIL_CREATE_EMAIL_DRAFT])
 composio_toolset = ComposioToolSet(api_key=COMPOSIO_API_KEY)
 # gsheets_tools = composio_toolset.get_tools(actions=['GOOGLESHEETS_LOOKUP_SPREADSHEET_ROW'])
 date_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
