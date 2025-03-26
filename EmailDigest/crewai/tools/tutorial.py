@@ -25,7 +25,7 @@ load_dotenv()
 
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 # COMPOSIO_API_KEY = os.getenv("COMPOSIO_API_KEY")
-COMPOSIO_API_KEY = "TO_ADD"
+COMPOSIO_API_KEY = "ADD_KEY_HERE"
 composio_toolset = ComposioToolSet(api_key=COMPOSIO_API_KEY)
 
 calendar_tools = composio_toolset.get_tools(actions=[Action.GOOGLECALENDAR_FIND_FREE_SLOTS, Action.GOOGLECALENDAR_CREATE_EVENT, Action.GMAIL_CREATE_EMAIL_DRAFT])
