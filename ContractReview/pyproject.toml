@@ -29,7 +29,7 @@ dev = [
 
 [tool.setuptools]
 packages = ["contract_review"]
-package-dir = {"contract_review" = "ContractReview/src"}
+package-dir = {"contract_review" = "src"}
 
 [tool.setuptools.package-data]
 contract_review = ["**/*.py"]

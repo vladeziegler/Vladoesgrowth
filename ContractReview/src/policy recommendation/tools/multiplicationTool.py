@@ -1,4 +1,4 @@
-from crewai_tools import tool
+from crewai.tools import tool
 
 @tool
 def multiplication_tool(first_number: float, second_number: float) -> float:

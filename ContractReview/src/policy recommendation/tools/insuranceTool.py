@@ -3,7 +3,7 @@ import json
 from pathlib import Path
 from typing import Optional, Dict, Any, List, Type, Union
 from pydantic import BaseModel, Field, ConfigDict
-from crewai_tools import BaseTool
+from crewai.tools import BaseTool
 
 # Default OpenAI API key - replace with your own or set as environment variable
 import os

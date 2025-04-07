@@ -1,9 +1,9 @@
 from crewai import Agent, Crew, Process, Task
 from tools.multiplicationTool import multiplication_tool 
-from langchain_openai import ChatOpenAI
+# from langchain_openai import ChatOpenAI
 # from composio_crewai import ComposioToolSet, Action, App, Trigger
 from pydantic import BaseModel, Field
-from crewai_tools import BaseTool
+from crewai.tools import BaseTool
 # from composio.client.collections import TriggerEventData
 import os
 import time 
@@ -15,7 +15,7 @@ from crewai import Agent, LLM
 
 # from composio_crewai import ComposioToolSet, Action, App
 from crewai import Agent, Task, Crew
-from langchain_openai import ChatOpenAI
+# from langchain_openai import ChatOpenAI
 from typing import Optional, List
 
 import os
@@ -30,13 +30,12 @@ openai_llm_4o = LLM(
     model="gpt-4o"
 )
 
-
-llama_llm = LLM(
-    model="huggingface/meta-llama/Llama-3.3-70B-Instruct",
-    # base_url="https://api.groq.com/openai/v1"
-)
+# llama_llm = LLM(
+#     model="huggingface/meta-llama/Llama-3.3-70B-Instruct",
+#     # base_url="https://api.groq.com/openai/v1"
+# )
 groq_llm = LLM(
-    model="groq/deepseek-r1-distill-llama-70b"
+    model="groq/meta-llama/llama-4-scout-17b-16e-instruct"
     # temperature=0.3
 )
 
@@ -150,6 +149,15 @@ claim_processor = Agent(
     llm=openai_llm_4o
 )
 
+remove_duplicates_agent = Agent(
+    role="Remove Duplicates Agent",
+    goal="""Remove duplicates from the list of damage and repair objects. If you spot an item where the value is the same, and the item is roughly equal, then it's a duplicate. When you decide on which duplicate to remove, you should figure out if it's most closely related to a damage or repair object and pick that one.
+    """,
+    backstory="You are an expert at removing duplicates from the list of damage and repair objects. You're incredibly experienced at assessing a claim situation against the set of policy guidelines. You can thoughtfully explain your reaosning to define whether something is covered or not, and walk through how to calculate the maximum coverage amounts.",
+    llm=openai_llm_mini,
+    verbose=True,
+)
+
 policy_processor = Agent(
     role="Policy Processor Agent",
     goal="""Use the PolicyQueryTool to populate the oustanding fields in the list of Repair and Damage Objects.
@@ -219,9 +227,9 @@ claim_processor_task = Task(
         - Damages are the damage to the property or furniture. For example, a broken window, a broken door, a broken table, etc. This object usually has a market or residual value.
         - Repairs are the repairs to the property or furniture. For example, fixing a broken window, fixing a broken door, fixing a broken table, etc. This is usually done by a contractor.
         - Repairs can also be actions that were taken to prevent further damages. For example: Tarp installed over damaged areas of the roof immediately after the storm.
+    - If an item's value is worth 10,000$, then it's a damage object. If repairing the item costs 10,000$, then it's a repair object. It cannot be both.
     - Do not make up any information. You only use the information coming from the tool's response.
     - Do not fill out coverage, maximum coverage amount fields.
-    - Make sure you do not report the same damage or repair object multiple times. Verify across the list of damage and repair objects to ensure you report them in the right object, and not multiple times.
     """,
     agent=claim_processor,
     output_pydantic=Claim,
@@ -229,6 +237,16 @@ claim_processor_task = Task(
     tools=[claim_tool],
     expected_output="A Claim object"
 )
+
+remove_duplicates_task = Task(
+    description="""Remove duplicates from the list of damage and repair objects. If you spot an item where the value is the same, and the item is roughly equal, then it's a duplicate. When you decide on which duplicate to remove, you should figure out if it's most closely related to a damage or repair object and pick that one.
+    """,
+    agent=remove_duplicates_agent,
+    output_pydantic=Claim,
+    output_file="Claim_duplicates_removed.md",
+    expected_output="A Claim object where duplicates are removed"
+)
+
 policy_processor_task = Task(
     description="""Take the claim object from previous task, and populate the coverage, maximum coverage amount, and supporting documents for each damage and repair object.
     A claim object contains the following:
@@ -288,7 +306,7 @@ claim_decision_task = Task(
     output_file="Claim_decision.md",
     tools=[calculation_tool, multiplication_tool],
     # output_pydantic=ClaimDecision,
-    context=[claim_processor_task, policy_processor_task],
+    context=[remove_duplicates_task, policy_processor_task],
     expected_output="""A detailed claim decision report that includes the following:
      - The summary of the claim decision and incident details
      - A list of tasks to investigate further the damages and repairs where the coverage is not certain
@@ -300,8 +318,8 @@ claim_decision_task = Task(
 
 # Create a crew with the agent
 quote_management_crew = Crew(
-    agents=[claim_processor, policy_processor, insurance_adjuster_agent],
-    tasks=[claim_processor_task, policy_processor_task, claim_decision_task],
+    agents=[claim_processor, remove_duplicates_agent, policy_processor, insurance_adjuster_agent],
+    tasks=[claim_processor_task, remove_duplicates_task, policy_processor_task, claim_decision_task],
     process=Process.sequential,
     # manager_agent=manager,
     verbose=True

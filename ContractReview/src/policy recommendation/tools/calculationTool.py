@@ -1,4 +1,4 @@
-from crewai_tools import BaseTool
+from crewai.tools import BaseTool
 from enum import Enum
 from typing import Optional, Type
 from pydantic import BaseModel, Field
