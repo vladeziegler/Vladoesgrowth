@@ -26,7 +26,7 @@ GROQ_API_KEY = os.getenv("GROQ_API_KEY")
 from crewai import LLM
 
 openai_llm = LLM(
-    model="openai/o3-mini"
+    model="gpt-4o"
 )
 
 import os
