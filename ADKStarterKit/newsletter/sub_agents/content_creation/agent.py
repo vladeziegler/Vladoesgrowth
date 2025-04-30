@@ -1,4 +1,4 @@
-from google.adk.agents import SequentialAgent, LlmAgent
+from google.adk.agents import SequentialAgent
 # from google.adk.agents import Agent, SequentialAgent, LlmAgent
 from google.adk.tools.agent_tool import AgentTool
 
@@ -58,9 +58,9 @@ conclusion_agent = Agent(
 #     output_key="newsletter",
 # )
 
-writer_agent = SequentialAgent(
+newsletter_agent = SequentialAgent(
     # model="gemini-2.0-flash",
-    name="writer_agent",
+    name="newsletter_agent",
     # instruction=WRITER_AGENT_INSTR,
     # output_schema=types.Newsletter,
     sub_agents=[
@@ -69,6 +69,14 @@ writer_agent = SequentialAgent(
         body_agent,
         conclusion_agent,
     ],
+)
+
+writer_agent = Agent(
+    model="gemini-2.0-flash",
+    name="writer_agent",
+    sub_agents=[newsletter_agent],
+    description="This agent crafts the newsletter based on the info provided by the subagents.",
+    instruction="Use the {{marketer_output}} and compare it to {{profile}} to populate the newsletter.",
 )
 
 # intro_agent = Agent(

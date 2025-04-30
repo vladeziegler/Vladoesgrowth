@@ -13,7 +13,7 @@ from newsletter.sub_agents.consolidate.prompt import CONSOLIDATE_AGENT_INSTR
 consolidate_agent = Agent(
     model="gemini-2.0-flash",
     name="consolidate_agent",
-    description="""An agent who can combine industry news that is relevant to the user's query and use this to write up a newsletter with the intro, body, and conclusion.""",
+    description="""An agent who can allocate work to the subagents.""",
     instruction=CONSOLIDATE_AGENT_INSTR,
     tools=[AgentTool(agent=marketer_agent), AgentTool(agent=writer_agent)],
 )
