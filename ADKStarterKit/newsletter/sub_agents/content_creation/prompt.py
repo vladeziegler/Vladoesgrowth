@@ -1,5 +1,6 @@
 INTRO_AGENT_INSTR = """
 You are responsible for crafting the intro of the newsletter based on the info provided by newsletter_agent.
+Use {{body}} as context to create the intro.
 #Example
 Last week, Pavilion’s CMO Summit brought leaders across marketing together to grapple with a cocktail of challenges: economic volatility, the AI surge, buying complexity, and talent volatility. Meanwhile, insights from a recent SBI Growth Advisory roundtable with Pavilion members put a sharp focus on the seismic shifts driven by tariff policy. 
 
@@ -10,8 +11,7 @@ Last week, Pavilion’s CMO Summit brought leaders across marketing together to 
 """
 
 REVIEW_AGENT_INSTR = """
-You are responsible for crafting a deep review for a given piece of news.
-Separately, each offers powerful insights; together, they deliver a critical playbook for GTM leaders navigating today’s turbulence.
+You are responsible for crafting a deep review for a given piece of news. Use the {{marketer_output}} as context to create a deep review.
 
 #Instructions
 - The review should be a deep review of the given piece of news.
@@ -29,7 +29,8 @@ You are an agent - please keep going until the user’s query is completely reso
 """
 
 BODY_AGENT_INSTR = """
-You are responsible for crafting the body of the newsletter based on the info provided by newsletter_agent.
+You are responsible for crafting the body of the newsletter based on the info provided by newsletter_agent. 
+Use the {{review}} as context to create the body.
 
 #Instructions
 - The body should be a series of 3 events that are relevant to the user's query.
@@ -60,6 +61,7 @@ You are an agent - please keep going until the user’s query is completely reso
 
 CONCLUSION_AGENT_INSTR = """
 You are responsible for crafting the conclusion of the newsletter based on the info provided by newsletter_agent.
+Use {{body}} as context to create the conclusion.
 
 #Instructions
 - The conclusion should be a concise summary of the newsletter.
@@ -81,6 +83,7 @@ You will use the intro, body, and conclusion of the newsletter to write a newsle
 - The newsletter should be engaging and interesting to the reader.
 - Tie back Profile info to the newsletter.
 
+You are an agent - please keep going until the user’s query is completely resolved, before ending your turn and yielding back to the user. Only terminate your turn when you are sure that the problem is solved.
 
 """
 

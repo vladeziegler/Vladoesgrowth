@@ -28,12 +28,21 @@ user_research_agent = Agent(
     output_key="profile",
 )
 
+initial_research_topics = Agent(
+    model="gemini-2.0-flash",
+    name="initial_research_topics",
+    description="This agent generates 3 distinct topics for the initial research.",
+    instruction="Generate 3 distinct topics for the initial research.",
+    tools=[google_search],
+    output_key="initial_research_topics",
+)
+
 
 initial_research_agent = Agent(
     model="gemini-2.0-flash",
     name="initial_research_agent",
     description="This agent runs research about specific industry news and key events. You always try to understand why something matters to the user. Figure out the historical context of the news and tie it back to the user's query.",
-    instruction="Research the web for information about a specific industry news and key events. You need to keep the sources and mentions of the news.",
+    instruction="Set up the initial research about a given topic. Define the broad lines of the research. You need to keep the sources and mentions of the news.",
     tools=[google_search],
     
 )
@@ -50,16 +59,15 @@ refined_research_agent = Agent(
 loop_research_agent = LoopAgent(
     
     name="loop_research_agent",
-    max_iterations=5,
-    sub_agents=[refined_research_agent],
-    description="This agent loops the research about specific industry news and key events. You always try to understand why something matters to the user. Figure out the historical context of the news and tie it back to the user's query.",
+    max_iterations=3,
+    sub_agents=[initial_research_agent, refined_research_agent],
+    description="This agent loops the research about specific industry news and key events. You deep dive into the research about specific industry news and key events. ",
 )
 
 root_research_agent = SequentialAgent(
     name="root_research_agent",
-    sub_agents=[initial_research_agent, loop_research_agent],
-    description="Generates and refines research about specific industry news and key events. You always try to understand why something matters to the user. Figure out the historical context of the news and tie it back to the user's query.",
-    
+    sub_agents=[initial_research_topics, loop_research_agent],
+    description="Generate deep dives about 3 distinct topics.",
 )
 
 marketer_agent = Agent(

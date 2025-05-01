@@ -64,9 +64,9 @@ newsletter_agent = SequentialAgent(
     # instruction=WRITER_AGENT_INSTR,
     # output_schema=types.Newsletter,
     sub_agents=[
-        intro_agent,
         review_agent,
         body_agent,
+        intro_agent,
         conclusion_agent,
     ],
 )
@@ -76,7 +76,7 @@ writer_agent = Agent(
     name="writer_agent",
     sub_agents=[newsletter_agent],
     description="This agent crafts the newsletter based on the info provided by the subagents.",
-    instruction="Use the {{marketer_output}} and compare it to {{profile}} to populate the newsletter.",
+    instruction="Consolidate the newsletter based on the info provided by the subagents.",
 )
 
 # intro_agent = Agent(
