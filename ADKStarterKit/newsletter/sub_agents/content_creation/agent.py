@@ -75,6 +75,7 @@ writer_agent = Agent(
     model="gemini-2.0-flash",
     name="writer_agent",
     sub_agents=[newsletter_agent],
+    
     description="This agent crafts the newsletter based on the info provided by the subagents.",
     instruction="Consolidate the newsletter based on the info provided by the subagents.",
 )
