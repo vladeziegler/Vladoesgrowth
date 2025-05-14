@@ -27,12 +27,14 @@ except Exception as e:
 class AdContext(BaseModel):
     ad_copy: str
     image_prompt: str
-    image_path: str
+    # image_path: str
 
     # convenience constructor for a blank context
     @classmethod
     def empty(cls) -> "AdContext":
-        return cls(ad_copy="", image_prompt="", image_path="")
+        return cls(ad_copy="", image_prompt="" 
+                #    ,image_path=""
+                   )
 
 async def get_ad_context() -> AdContext:
     """
@@ -40,7 +42,9 @@ async def get_ad_context() -> AdContext:
     """
     # Implement the logic to retrieve the ad context from the user's request
     # This is a placeholder implementation
-    return AdContext(ad_copy="", image_prompt="", image_path="")
+    return AdContext(ad_copy="", image_prompt=""
+                     # , image_path=""
+                     )
 
 @function_tool
 def save_ad_copy_to_markdown(
@@ -149,13 +153,13 @@ def generate_ad_image(
         image_path = os.path.join(save_dir, image_filename)
         absolute_image_path = os.path.abspath(image_path)
 
-        print(f"💾 [generate_ad_image] Saving image to: {absolute_image_path}")
+        # print(f"💾 [generate_ad_image] Saving image to: {absolute_image_path}")
         with open(absolute_image_path, "wb") as f:
             f.write(image_data_bytes)
 
-        success_message = f"Image successfully generated and saved to {absolute_image_path}"
-        context.context.image_path = absolute_image_path   # persist
-        print(f"✅ [generate_ad_image] {success_message}")
+        # success_message = f"Image successfully generated and saved to {absolute_image_path}"
+        # context.context.image_path = absolute_image_path   # persist
+        # print(f"✅ [generate_ad_image] {success_message}")
         return absolute_image_path
 
     except APIError as e:
