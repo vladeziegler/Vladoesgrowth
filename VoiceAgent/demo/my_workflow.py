@@ -5,8 +5,14 @@ from collections.abc import AsyncIterator
 from typing import Callable
 
 from agents import Agent, Runner, TResponseInputItem
-from agents.voice import VoiceWorkflowBase, VoiceWorkflowHelper
-from agents.items import ItemHelpers
+from agents.voice import VoiceWorkflowBase
+from agents.items import (
+    ItemHelpers,
+    ReasoningItem,
+    MessageOutputItem,
+    HandoffOutputItem,
+)
+from agents.result import RunResultStreaming  # for typing
 from tools import save_ad_copy_to_markdown, generate_image_prompt, generate_ad_image, AdContext
 
 from demo_pkg_agents import (
@@ -17,6 +23,16 @@ from demo_pkg_agents import (
 )
 
 __all__ = ["MyWorkflow"]
+
+
+def _should_speak(msg: str) -> bool:
+    """Heuristic: speak only if message clearly requests more input."""
+    msg = msg.strip()
+    return (
+        msg.endswith("?")
+        or msg.lower().startswith(("could you", "would you", "can you", "please"))
+        or "what would you like" in msg.lower()
+    )
 
 
 class MyWorkflow(VoiceWorkflowBase):
@@ -64,29 +80,42 @@ class MyWorkflow(VoiceWorkflowBase):
         print(f"[MyWorkflow] Input history updated with user message. History length: {len(self._input_history)}")
 
         # ------------------------------------------------------
-        #  NEW: run synchronously, decide if we should speak
+        #  ⏩  Low-latency: stream as the agent reasons / calls tools
         # ------------------------------------------------------
-        print(f"[MyWorkflow] Calling Runner.run for agent: {self._current_agent.name}")
-        result = await Runner.run(
+        print(f"[MyWorkflow] Calling Runner.run_streamed for agent: {self._current_agent.name}")
+        result: RunResultStreaming = Runner.run_streamed(
             self._current_agent,
             self._input_history,
             context=self._context,
         )
 
-        # Pull full text generated during this turn
-        full_agent_message: str = ItemHelpers.text_message_outputs(result.new_items).strip()
-        print(f"[MyWorkflow] Full agent message: {full_agent_message!r}")
+        async for ev in result.stream_events():
+            # ── We only care about *semantic* events (ignore raw token deltas)
+            if ev.type != "run_item_stream_event":
+                continue
 
-        def _should_speak(msg: str) -> bool:
-            """Heuristic: speak only if message clearly requests more input."""
-            return msg.endswith("?") or msg.lower().startswith(("could you", "would you", "can you"))
+            item = ev.item
 
-        if _should_speak(full_agent_message):
-            yield full_agent_message   # ⟶ passed to TTS
-        else:
-            print("[MyWorkflow] Suppressing TTS – message is not a question.")
+            # 1️⃣  Reasoning – short "thinking" or progress snippets (these are spoken)
+            if isinstance(item, ReasoningItem):
+                reason = ItemHelpers.extract_last_content(item.raw_item).strip()
+                if reason:
+                    yield reason  # Speak reasoning/progress naturally
 
-        # After run completes, update history & remember where we ended
+            # 2️⃣  Status after each hand-off (do not yield or speak)
+            elif isinstance(item, HandoffOutputItem):
+                continue  # Do not yield handoff status
+
+            # 3️⃣  Actual user-facing messages: only yield if it's a progress update or action
+            elif isinstance(item, MessageOutputItem):
+                msg = ItemHelpers.text_message_output(item).strip()
+                # Only speak if it's a progress/action update, not a question or info
+                if not _should_speak(msg):
+                    # Heuristic: treat as progress update if not a question
+                    yield msg  # Speak progress/action
+                # Otherwise, skip (do not yield clarifications/questions)
+
+        # ── Run is done, update conversation state
         self._input_history = result.to_input_list()
         self._current_agent = result.last_agent
         print(f"[MyWorkflow] Turn complete. Next agent: {self._current_agent.name if self._current_agent else 'None'}") 

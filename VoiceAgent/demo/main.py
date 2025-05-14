@@ -22,7 +22,7 @@ SAMPLE_RATE = 24_000  # 24 kHz mono – default for the OpenAI voice endpoints
 CHANNELS = 1          # mono
 RECORD_SECONDS = 5    # how long to record from microphone for each turn
 TTS_MODEL_NAME = "tts-1"
-TTS_VOICE_NAME = "alloy"
+TTS_VOICE_NAME = "echo"
 
 # Ensure we are running from this directory (so relative paths work)
 script_dir = Path(__file__).parent.resolve()
@@ -115,9 +115,10 @@ async def main_conversation_loop() -> None:
                 # --- END DETAILED EVENT LOGGING ---
 
                 if event.type == "voice_stream_event_audio" and event.data is not None:
-                    print(f"[TTS_PLAYER] Playing audio chunk of size: {len(event.data)}")
-                    player.write(event.data)
-                    tts_active = True
+                    # Play all non-silent audio events (the workflow controls what is spoken)
+                    if len(event.data) > 500:
+                        player.write(event.data)
+                        tts_active = True
                 elif event.type == "voice_stream_event_lifecycle":
                     print(f"[LIFECYCLE] Event: {event.event}")
                     if event.event == "turn_started":

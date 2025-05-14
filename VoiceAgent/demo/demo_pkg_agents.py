@@ -7,6 +7,7 @@ from tools import (
     save_ad_copy_to_markdown,
     AdContext,
 )
+from agents.items import MessageOutputItem, ReasoningItem
 import os
 import dotenv
 dotenv.load_dotenv()
@@ -91,7 +92,7 @@ initial_agent = news_research_agent
 # initial_agent = prompt_generation_test_agent
 
 # --- Full Multi-Agent Setup ---
-
+RECOMMENDED_SUBPROMPT_PREFIX = "If anything is unclear, ask clarifying questions. If you need to think, yield a ReasoningItem('Thinking about the best ad copy...') before you start writing. Once you are done with your task, yield a MessageOutputItem('Done!') to indicate that you are done and go back to triage agent."
 # -------------------------------------------------------------------
 # SPECIALIST AGENTS (first, because triage needs to reference them)
 # -------------------------------------------------------------------
@@ -100,12 +101,16 @@ copywriting_agent = Agent[AdContext](
     name="Ad Copywriter",
     handoff_description="Writes or rewrites ad copy and saves it to Markdown.",
     instructions=prompt_with_handoff_instructions(
+        f"{RECOMMENDED_SUBPROMPT_PREFIX}\n"
         "You are an expert ad copywriter.\n"
         "# Routine\n"
         "1. If you still need information, ask a *single clear question*.\n"
         "2. Otherwise, write Title / Subtitle / Paragraph copy.\n"
         "3. Call `save_ad_copy_to_markdown` with the three parts.\n"
-        "4. Hand off back to **Triage Agent**."
+        "4. Hand off back to **Triage Agent**.\n"
+        "# Streaming\n"
+        "- As you think, yield ReasoningItem('Thinking about the best ad copy...') before you start writing.\n"
+        "- If you need clarification, yield MessageOutputItem('Can you clarify the target audience?') immediately.\n"
     ),
     model="gpt-4o",
     tools=[save_ad_copy_to_markdown],
@@ -117,6 +122,7 @@ prompt_generation_agent = Agent[AdContext](
     name="Image Prompt Generator",
     handoff_description="Creates a DALL·E style prompt from the ad copy.",
     instructions=prompt_with_handoff_instructions(
+        f"{RECOMMENDED_SUBPROMPT_PREFIX}\n"
         "You are an image-prompt engineer.\n"
         "# Routine\n"
         "1. If the previous agent asked a question, repeat that question verbatim.\n"
@@ -133,6 +139,7 @@ image_generation_agent = Agent[AdContext](
     name="Ad Image Generator",
     handoff_description="Generates the final image from an image prompt.",
     instructions=prompt_with_handoff_instructions(
+        f"{RECOMMENDED_SUBPROMPT_PREFIX}\n"
         "You are an image generation specialist.\n"
         "# Routine\n"
         "1. Use `generate_ad_image` with the provided prompt.\n"
