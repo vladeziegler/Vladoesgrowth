@@ -1,12 +1,13 @@
 import os
-from agents import function_tool
+from agents import function_tool, RunContextWrapper
 from openai import OpenAI, APIError
 import openai
 import base64 # Added for b64 decoding
 import uuid   # Added for unique filenames
 from pathlib import Path
 import dotenv
-from typing import Optional # Import Optional
+from typing import Optional
+from pydantic import BaseModel
 # import requests # Ensure this is removed if no longer used
 dotenv.load_dotenv()
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
@@ -23,14 +24,39 @@ except Exception as e:
     print(f"CRITICAL: Failed to initialize OpenAI client: {e}. Image generation will fail.")
     client = None
 
+class AdContext(BaseModel):
+    ad_copy: str
+    image_prompt: str
+    image_path: str
+
+    # convenience constructor for a blank context
+    @classmethod
+    def empty(cls) -> "AdContext":
+        return cls(ad_copy="", image_prompt="", image_path="")
+
+async def get_ad_context() -> AdContext:
+    """
+    Retrieves the current ad context from the user's request.
+    """
+    # Implement the logic to retrieve the ad context from the user's request
+    # This is a placeholder implementation
+    return AdContext(ad_copy="", image_prompt="", image_path="")
+
 @function_tool
-def save_ad_copy_to_markdown(title: str, subtitle: str, paragraph: str) -> str:
+def save_ad_copy_to_markdown(
+    context: RunContextWrapper[AdContext],
+    title: str,
+    subtitle: str,
+    paragraph: str,
+) -> str:
     """
     Saves the provided ad copy (title, subtitle, paragraph) to a Markdown file.
     The filename will be derived from the title.
     Returns a message indicating success or failure.
     """
     try:
+        # Persist in context so downstream agents can read it
+        context.context.ad_copy = f"{title}\n{subtitle}\n{paragraph}"
         # Sanitize title for filename (simple example)
         safe_title = "".join(c if c.isalnum() or c in " _-" else "_" for c in title)[:50]
         if not safe_title:
@@ -58,17 +84,24 @@ def save_ad_copy_to_markdown(title: str, subtitle: str, paragraph: str) -> str:
         return error_message
 
 @function_tool
-def generate_image_prompt(full_ad_concept: str) -> str:
+def generate_image_prompt(
+    context: RunContextWrapper[AdContext], full_ad_concept: str
+) -> str:
     """Generate an image prompt for ad generation based on a full ad concept string."""
     print(f"[generate_image_prompt_tool] Received full_ad_concept: {full_ad_concept[:150]}...")
     # Simple prompt construction; can be made more sophisticated if needed
     # This version expects the input `full_ad_concept` to contain all necessary details.
     generated_prompt = f"Create an advertising image based on the following concept: '{full_ad_concept}'. Ensure the image is engaging, high-quality, and directly relevant to the core message. Avoid text in the image."
     print(f"[generate_image_prompt_tool] Generated image prompt: {generated_prompt[:150]}...")
+
+    # Persist in context
+    context.context.image_prompt = generated_prompt
     return generated_prompt
 
 @function_tool
-def generate_ad_image(image_prompt: str) -> str:
+def generate_ad_image(
+    context: RunContextWrapper[AdContext], image_prompt: str
+) -> str:
     """
     Generates an ad image using OpenAI's gpt-image-1 model, expecting b64_json response format,
     saves it locally from the base64 encoded response, and returns the local file path.
@@ -121,6 +154,7 @@ def generate_ad_image(image_prompt: str) -> str:
             f.write(image_data_bytes)
 
         success_message = f"Image successfully generated and saved to {absolute_image_path}"
+        context.context.image_path = absolute_image_path   # persist
         print(f"✅ [generate_ad_image] {success_message}")
         return absolute_image_path
 

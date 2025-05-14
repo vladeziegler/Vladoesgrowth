@@ -5,19 +5,7 @@ from pathlib import Path
 import numpy as np
 import sounddevice as sd
 import traceback
-
-# Imports for the core agent framework
-from demo_pkg_agents import ( # Assuming your agents are in demo_pkg_agents.py
-    # news_research_agent,
-    copywriting_agent,
-    # platform_adjustment_agent,
-    # image_prompt_generation_agent,
-    image_generation_agent,
-    # AdWorkflow # Your custom workflow
-)
-
 from my_workflow import MyWorkflow
-
 # Correct imports for the voice pipeline based on OpenAI Agents SDK documentation
 from agents.voice import AudioInput, VoicePipeline
 
@@ -72,9 +60,7 @@ async def main_conversation_loop() -> None:
     player.start()
     print("[SYSTEM] Audio player started.")
 
-    accumulated_text_for_tts = ""
-    tts_active = False        # True while a chunk is being played
-    should_play_audio = False # True only when the agent is asking a question
+    tts_active = False  # we'll just play whatever audio arrives
 
     try:
         while True:
@@ -129,39 +115,17 @@ async def main_conversation_loop() -> None:
                 # --- END DETAILED EVENT LOGGING ---
 
                 if event.type == "voice_stream_event_audio" and event.data is not None:
-                    if should_play_audio:
-                        print(f"[TTS_PLAYER] Playing audio chunk of size: {len(event.data)}")
-                        player.write(event.data)
-                        tts_active = True
-                    else:
-                        print("[TTS_PLAYER] -- Skipping non-question audio chunk")
-                elif event.type == "voice_stream_event_text_delta" and event.text_delta:
-                    print(f"[AGENT_TEXT_DELTA] '{event.text_delta}'")
-                    accumulated_text_for_tts += event.text_delta
-
-                    # Detect a question → allow the next audio chunks through
-                    if "?" in event.text_delta.strip():
-                        should_play_audio = True
+                    print(f"[TTS_PLAYER] Playing audio chunk of size: {len(event.data)}")
+                    player.write(event.data)
+                    tts_active = True
                 elif event.type == "voice_stream_event_lifecycle":
                     print(f"[LIFECYCLE] Event: {event.event}")
                     if event.event == "turn_started":
                         print("[SYSTEM] Agent turn started.")
-                        accumulated_text_for_tts = ""
                         tts_active = False
-                        should_play_audio = False   # reset every turn
                     elif event.event == "turn_ended":
-                        if accumulated_text_for_tts:
-                            print(f"[SYSTEM] Agent turn ended. Full text from agent for this turn: '{accumulated_text_for_tts}'")
-                            # If we were to speak the whole turn at once, it would be here.
-                            # But we are streaming chunk by chunk with voice_stream_event_audio.
-                        else:
-                            print("[SYSTEM] Agent turn ended. No text accumulated for TTS in this turn (might be tool calls only or no output).")
-                        accumulated_text_for_tts = ""
-                        should_play_audio = False
                         if tts_active: # If TTS was active in this turn, wait for it to finish
                             print("[SYSTEM] Waiting for TTS to finish for this turn...")
-                            # sd.wait() # This might block too long if player is continuously fed.
-                            # Better to let player drain naturally. Or use player.flush() if available.
                         tts_active = False
                 elif event.type == "voice_stream_event_error":
                     print(f"[ERROR_EVENT] Code: {event.code}, Message: {event.message}")

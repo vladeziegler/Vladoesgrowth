@@ -1,7 +1,12 @@
 from agents import Agent, WebSearchTool
-from agents.extensions.handoff_prompt import prompt_with_handoff_instructions
+from agents.extensions.handoff_prompt import prompt_with_handoff_instructions, RECOMMENDED_PROMPT_PREFIX
 # The save_image_locally tool is removed from this import as generate_ad_image now handles saving.
-from tools import generate_image_prompt, generate_ad_image, save_ad_copy_to_markdown
+from tools import (
+    generate_image_prompt,
+    generate_ad_image,
+    save_ad_copy_to_markdown,
+    AdContext,
+)
 import os
 import dotenv
 dotenv.load_dotenv()
@@ -87,73 +92,87 @@ initial_agent = news_research_agent
 
 # --- Full Multi-Agent Setup ---
 
-# Agent 3: Ad Image Generator (Final Agent in the ad-creation chain for a turn)
-image_generation_agent = Agent(
-    name="Ad Image Generator",
-    instructions=prompt_with_handoff_instructions(
-        "You are an AI image generation specialist. "
-        "INPUTS YOU RECEIVE: You will receive the image prompt string AND a status message about Markdown saving from the 'Image Prompt Generator'."
-        "YOUR TASK: Use your 'generate_ad_image' tool with the received image prompt. This tool will save the image locally and return a message including its file path. "
-        "YOUR FINAL RESPONSE TO THE USER: After the image is generated and saved, your response to the user MUST clearly state: "
-        "  1. The success message (including the image file path) from the 'generate_ad_image' tool. "
-        "  2. The image prompt string you received and used. "
-        "  3. The status message about Markdown file saving. "
-        "After presenting these three pieces of information, you MUST ask an open-ended question to continue the conversation, for example: 'What would you like to do next?' or 'Is there anything else I can help you with today?' "
-        "Do NOT attempt any handoffs yourself unless the user explicitly asks for a capability that requires a different specialized agent you know about."
-    ),
-    model="gpt-4o",
-    tools=[generate_ad_image]
-)
-
-# Agent 2: Image Prompt Generator
-prompt_generation_agent = Agent(
-    name="Image Prompt Generator",
-    handoff_description="Generates a detailed image prompt based on ad copy and the markdown save status, then passes the prompt and save status to the Ad Image Generator.",
-    instructions=prompt_with_handoff_instructions(
-        "You are an AI image prompt engineer. "
-        "INPUTS YOU RECEIVE: You will receive from the 'Ad Copywriter': "
-        "  1. The ad copy (title, subtitle, paragraph) OR a clarifying question from the Copywriter if it couldn't proceed. "
-        "  2. A status message about whether the ad copy was saved as a Markdown file (this may be absent if the Copywriter asked a question). "
-        "YOUR TASK: "
-        "  - If you received a clarifying question from the Copywriter, your ONLY action is to repeat that exact question to the user. Do not use tools or attempt to generate a prompt. Wait for the user's answer in the next turn. "
-        "  - If you received ad copy: Based on the ad copy (title, subtitle, paragraph), create a detailed image prompt. "
-        "    This prompt should synthesize the ad copy into a coherent visual concept. "
-        "    IMPORTANT: Your generated image prompt should include details like: text to add to the image (complementary to the ad copy, not a duplicate), a description of what should be in the image, the desired style of the image, and any preferred font or style for the text in the image. "
-        "    After crafting this detailed prompt string, you MUST call your 'generate_image_prompt' tool, passing this crafted prompt string as the 'full_ad_concept' argument. "
-        "YOUR OUTPUT FOR NEXT AGENT (only if you generated a prompt): After your 'generate_image_prompt' tool returns its result, your entire response, which will be handed off to the 'Ad Image Generator', MUST contain: "
-        "  - The image prompt string returned by your 'generate_image_prompt' tool. "
-        "  - The status message about the Markdown file saving that you received from the 'Ad Copywriter'. "
-        "Then, **immediately hand-off to the 'Ad Image Generator'.**"
-    ),
-    model="gpt-4o",
-    tools=[generate_image_prompt], 
-    handoffs=[image_generation_agent]
-)
-
-# Agent 1: Ad Copywriter (Initial Agent for ad creation flow - now interactive)
-copywriting_agent = Agent(
+# -------------------------------------------------------------------
+# SPECIALIST AGENTS (first, because triage needs to reference them)
+# -------------------------------------------------------------------
+# 1. Ad Copywriter
+copywriting_agent = Agent[AdContext](
     name="Ad Copywriter",
-    handoff_description="Creates ad copy (possibly after asking clarifying questions), saves it to Markdown, then passes copy and save status to the Image Prompt Generator.",
+    handoff_description="Writes or rewrites ad copy and saves it to Markdown.",
     instructions=prompt_with_handoff_instructions(
-        "You are an expert ad copywriter. Your goal is to generate compelling ad copy (Title, Subtitle, Paragraph)."
-        "CONVERSATION HISTORY: You have access to the full conversation history. Review it carefully. "
-        "YOUR TASK - DECISION POINT:"
-        "1. ASSESS USER INPUT: Look at the user's most recent request and any previous answers they provided to your questions. "
-        "2. DO YOU HAVE ENOUGH INFO?: Based on this, decide if you have ALL the necessary details to write effective ad copy (e.g., product/service, target audience, key message/unique selling points, desired tone)."
-        "YOUR ACTIONS - BASED ON DECISION:"
-        "  A. IF NOT ENOUGH INFO: Your *entire response for this turn* MUST be a polite and specific question to the user to obtain ONLY the missing information. Phrase it clearly. Example: 'To write the best ad, could you please tell me more about [specific missing detail e.g., the target audience]?' Do NOT generate any ad copy or call any tools if you are asking a question. You will get the answer in the next turn. "
-        "  B. IF SUFFICIENT INFO: Proceed to: "
-        "     i. Create compelling ad copy: a catchy Title, an engaging Subtitle, and a persuasive Paragraph. "
-        "     ii. After crafting the copy, you MUST call the 'save_ad_copy_to_markdown' tool. Provide the 'title', 'subtitle', and 'paragraph' you created as distinct arguments to this tool. "
-        "     iii. YOUR OUTPUT FOR NEXT AGENT (after tool call): Your entire response, which will be handed off to the 'Image Prompt Generator', MUST contain TWO distinct pieces of information: "
-        "         - The ad copy (title, subtitle, and paragraph) that you generated. "
-        "         - The result message (a string indicating success or failure) returned by the 'save_ad_copy_to_markdown' tool. "
-        "     iv. Then, **immediately hand-off to the 'Image Prompt Generator'.**"
+        "You are an expert ad copywriter.\n"
+        "# Routine\n"
+        "1. If you still need information, ask a *single clear question*.\n"
+        "2. Otherwise, write Title / Subtitle / Paragraph copy.\n"
+        "3. Call `save_ad_copy_to_markdown` with the three parts.\n"
+        "4. Hand off back to **Triage Agent**."
     ),
     model="gpt-4o",
-    tools=[save_ad_copy_to_markdown, WebSearchTool()], 
-    handoffs=[prompt_generation_agent]
+    tools=[save_ad_copy_to_markdown],
+    handoffs=[],         # will be filled later
 )
 
-initial_agent = copywriting_agent # This is the entry point for the ad creation flow.
+# 2. Image Prompt Generator
+prompt_generation_agent = Agent[AdContext](
+    name="Image Prompt Generator",
+    handoff_description="Creates a DALL·E style prompt from the ad copy.",
+    instructions=prompt_with_handoff_instructions(
+        "You are an image-prompt engineer.\n"
+        "# Routine\n"
+        "1. If the previous agent asked a question, repeat that question verbatim.\n"
+        "2. Else, craft a detailed image prompt and call `generate_image_prompt`.\n"
+        "3. Hand off back to **Triage Agent**."
+    ),
+    model="gpt-4o",
+    tools=[generate_image_prompt],
+    handoffs=[],         # will be filled later
+)
+
+# 3. Ad Image Generator
+image_generation_agent = Agent[AdContext](
+    name="Ad Image Generator",
+    handoff_description="Generates the final image from an image prompt.",
+    instructions=prompt_with_handoff_instructions(
+        "You are an image generation specialist.\n"
+        "# Routine\n"
+        "1. Use `generate_ad_image` with the provided prompt.\n"
+        "2. Return the success message with the file path.\n"
+        "3. Ask an open question like 'What would you like next?'\n"
+        "4. Hand off back to **Triage Agent** if the user's next request is not purely image-related."
+    ),
+    model="gpt-4o",
+    tools=[generate_ad_image],
+    handoffs=[],         # will be filled later
+)
+
+# -------------------------------------------------------------------
+# TRIAGE AGENT
+RECOMMENDED_PROMPT_PREFIX = "Your an ad creative director. You are responsible for overseeing the creation of an ad. You need to gather information from the copywriter to come up with an ad concept. From then on, you need to write a prompt that encapsulates the ad concept. Finally, you need to generate an image that captures the ad concept. You have a team working with you, so you need to delegate tasks to them."
+# -------------------------------------------------------------------
+triage_agent = Agent[AdContext](
+    name="Ad Triage Agent",
+    handoff_description="Routes user requests to the correct specialist.",
+    instructions=(
+        f"{RECOMMENDED_PROMPT_PREFIX}\n"
+        "You are the conversation entry point.\n"
+        "ROUTINE"
+        "Firt generate the ad copy. Then generate the image prompt. Then generate the image. Then refine the image prompt if needed. Then generate another image."
+        "If user wants to refine any of the results, you can handoff to the appropriate agent."
+        "# Delegation rules\n"
+        "• If the user asks for *new* copy or copy changes → **Ad Copywriter**\n"
+        "• If the user asks to refine the image prompt → **Image Prompt Generator**\n"
+        "• If the user asks for *new* image or image changes → **Ad Image Generator**"
+        "Traditional sequence is to first gather ad copy from Ad Copywriter, then generate an image prompt, then generate an image, then refine the image prompt if needed, and then generate another image."
+    ),
+    model="gpt-4o",
+    tools=[],
+    handoffs=[copywriting_agent, prompt_generation_agent, image_generation_agent]
+)
+
+initial_agent = triage_agent # This is the entry point for the ad creation flow.
 # If the conversation continues, MyWorkflow._current_agent will track the active agent.
+
+# Ensure *all* specialist <-> triage links exist exactly once
+for ag in (copywriting_agent, prompt_generation_agent, image_generation_agent):
+    if triage_agent not in ag.handoffs:
+        ag.handoffs.append(triage_agent)
