@@ -1,0 +1,9 @@
+google
+google.genai
+pydantic
+fastapi
+uvicorn[standard]
+python-multipart
+aiofiles
+python-dotenv
+requests
